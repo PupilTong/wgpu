@@ -3,6 +3,10 @@ fn main() {
         native: { not(target_family = "wasm") },
         Emscripten: { all(target_family = "wasm", target_os = "emscripten") },
         web: { all(target_family = "wasm", not(Emscripten), feature = "web") },
+        // WASI, where wasm-bindgen's JS glue does not exist: `napi_web` routes
+        // `crate::js` at the Node-API shim instead. See `wgpu/src/js.rs`.
+        wasi: { all(target_family = "wasm", target_os = "wasi") },
+        napi_web: { all(wasi, feature = "napi-web") },
 
         send_sync: { any(
             native,

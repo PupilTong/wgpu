@@ -37,6 +37,8 @@ use crate::backend::custom::*;
 use crate::backend::webgpu::*;
 #[cfg(wgpu_core)]
 use crate::backend::wgpu_core::*;
+#[cfg(webgpu)]
+use crate::js::js_sys;
 
 /// Create a single trait with the given supertraits and a blanket impl for all types that implement them.
 ///

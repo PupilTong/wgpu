@@ -259,6 +259,8 @@ mod api;
 mod backend;
 mod cmp;
 mod dispatch;
+#[cfg(any(web, napi_web))]
+mod js;
 mod macros;
 pub mod util;
 
@@ -330,8 +332,10 @@ pub use raw_window_handle as rwh;
 
 /// Re-export of our `web-sys` dependency.
 ///
-#[cfg(web)]
-pub use web_sys;
+/// With the `napi-web` feature this is the Node-API-backed stand-in from the
+/// `wgpu-napi-web` crate rather than the `web-sys` crate.
+#[cfg(any(web, napi_web))]
+pub use crate::js::web_sys;
 
 /// Vendored WebGPU JS-handle types used by the WebGPU backend.
 ///

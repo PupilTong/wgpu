@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = GpuError , extends = :: js_sys :: Object , js_name = GPUInternalError , typescript_type = "GPUInternalError")]
+    # [wasm_bindgen (extends = GpuError , extends = js_sys:: Object , js_name = GPUInternalError , typescript_type = "GPUInternalError")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuInternalError` class."]
     #[doc = ""]

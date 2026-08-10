@@ -1,6 +1,6 @@
 use core::ops::{Deref, DerefMut};
 
-use wasm_bindgen::JsValue;
+use crate::js::wasm_bindgen::JsValue;
 
 /// Derefs to a [`JsValue`] that's known not to be `undefined` or `null`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

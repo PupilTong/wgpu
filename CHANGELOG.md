@@ -50,6 +50,10 @@ Bottom level categories:
 - Many types now offer `pub const fn default()` in addition to implementing the `Default` trait, allowing constants to make use of default values. By @kpreid in [#9929](https://github.com/gfx-rs/wgpu/pull/9929).
 - `wgpu-core` now exposes `validate_device_descriptor` and `validate_texture_descriptor` functions that perform the same descriptor validation the corresponding resource creation APIs would, without actually creating a resource. This may be useful in conjunction with hal raw APIs. By @andyleiserson in [#9967](https://github.com/gfx-rs/wgpu/pull/9967) and [#9979](https://github.com/gfx-rs/wgpu/pull/9979).
 
+#### WebGPU
+
+- New `napi-web` feature: the WebGPU backend can reach JavaScript through Node-API (napi-rs / emnapi) instead of wasm-bindgen, which makes `wasm32-wasip1` and `wasm32-wasip1-threads` usable targets. A WASI module cannot use wasm-bindgen at all — its imports are satisfied by glue that `wasm-bindgen-cli` only emits for `wasm32-unknown-unknown`, so such a build links but cannot be instantiated. With this feature the same `navigator.gpu` objects are driven over Node-API, which is what a napi-rs addon has available in the browser. The interop layer lives in the new `wgpu-napi-web` crate; the addon installs its `napi_env` once per thread with `wgpu_napi_web::install`. Nothing changes for any other target.
+
 #### Hal
 
 - Add `BufferBinding::buffer`, a public read accessor for the bound buffer, which was previously inaccessible to out-of-tree `wgpu_hal::Api` implementations. By @danlehmann in [#9820](https://github.com/gfx-rs/wgpu/pull/9820).

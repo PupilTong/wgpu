@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = GpuError , extends = :: js_sys :: Object , js_name = GPUValidationError , typescript_type = "GPUValidationError")]
+    # [wasm_bindgen (extends = GpuError , extends = js_sys:: Object , js_name = GPUValidationError , typescript_type = "GPUValidationError")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuValidationError` class."]
     #[doc = ""]

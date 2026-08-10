@@ -1,5 +1,8 @@
 #[allow(unused_imports, reason = "conditionally used, including in docs")]
 use crate::{DownlevelFlags, Origin2d};
+// The JS interop layer is named once per crate; see `crate::js`.
+#[cfg(all(target_family = "wasm", feature = "web"))]
+use crate::js::{js_sys, web_sys};
 
 /// View of an external texture that can be used to copy to a texture.
 ///

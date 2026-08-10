@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = WGSLLanguageFeatures , typescript_type = "WGSLLanguageFeatures")]
+    # [wasm_bindgen (extends = js_sys:: Object , js_name = WGSLLanguageFeatures , typescript_type = "WGSLLanguageFeatures")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WgslLanguageFeatures` class."]
     #[doc = ""]
@@ -60,7 +61,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn for_each(
         this: &WgslLanguageFeatures,
-        callback: &::js_sys::Function<fn(::js_sys::JsString) -> ::js_sys::Undefined>,
+        callback: &js_sys::Function<fn(js_sys::JsString) -> js_sys::Undefined>,
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (method , structural , js_class = "WGSLLanguageFeatures" , js_name = has)]
@@ -85,7 +86,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn entries(
         this: &WgslLanguageFeatures,
-    ) -> ::js_sys::Iterator<::js_sys::ArrayTuple<(::js_sys::JsString, ::js_sys::JsString)>>;
+    ) -> js_sys::Iterator<js_sys::ArrayTuple<(js_sys::JsString, js_sys::JsString)>>;
 
     # [wasm_bindgen (method , structural , js_class = "WGSLLanguageFeatures" , js_name = keys)]
     #[doc = "The `keys()` method."]
@@ -96,7 +97,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn keys(this: &WgslLanguageFeatures) -> ::js_sys::Iterator<::js_sys::JsString>;
+    pub fn keys(this: &WgslLanguageFeatures) -> js_sys::Iterator<js_sys::JsString>;
 
     # [wasm_bindgen (method , structural , js_class = "WGSLLanguageFeatures" , js_name = values)]
     #[doc = "The `values()` method."]
@@ -107,5 +108,5 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn values(this: &WgslLanguageFeatures) -> ::js_sys::Iterator<::js_sys::JsString>;
+    pub fn values(this: &WgslLanguageFeatures) -> js_sys::Iterator<js_sys::JsString>;
 }

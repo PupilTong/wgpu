@@ -5,6 +5,8 @@ use core::{error, fmt};
 
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 
+#[cfg(web)]
+use crate::js::web_sys;
 use crate::util::Mutex;
 use crate::*;
 

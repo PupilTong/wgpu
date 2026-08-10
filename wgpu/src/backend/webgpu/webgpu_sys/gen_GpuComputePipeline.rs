@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUComputePipeline , typescript_type = "GPUComputePipeline")]
+    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUComputePipeline , typescript_type = "GPUComputePipeline")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuComputePipeline` class."]
     #[doc = ""]

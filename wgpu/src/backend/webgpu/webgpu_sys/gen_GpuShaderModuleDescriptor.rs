@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUShaderModuleDescriptor)]
+    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUShaderModuleDescriptor)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuShaderModuleDescriptor` dictionary."]
     #[doc = ""]
@@ -81,7 +82,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "compilationHints")]
     pub fn get_compilation_hints(
         this: &GpuShaderModuleDescriptor,
-    ) -> Option<::js_sys::Array<GpuShaderModuleCompilationHint>>;
+    ) -> Option<js_sys::Array<GpuShaderModuleCompilationHint>>;
 
     #[doc = "Change the `compilationHints` field of this object."]
     #[doc = ""]
@@ -105,7 +106,7 @@ impl GpuShaderModuleDescriptor {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(code: &str) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
         ret.set_code(code);
         ret
     }

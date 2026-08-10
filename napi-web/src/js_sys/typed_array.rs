@@ -1,0 +1,449 @@
+//! `ArrayBuffer` and the typed array views over it.
+//!
+//! Typed arrays are the only place where the Node-API route is not a faithful
+//! stand-in for wasm-bindgen, because they are the only place where JavaScript is
+//! handed *bytes* rather than a reference. [`Uint8Array`]'s own documentation is
+//! where that difference is spelled out, since a private module's documentation is
+//! not part of the published API.
+
+use alloc::vec::Vec;
+use core::ptr;
+
+use napi_sys as sys;
+
+use crate::env;
+use crate::rt;
+use crate::value::JsValue;
+
+use super::Object;
+
+js_type! {
+    /// The JavaScript `ArrayBuffer`.
+    ///
+    /// `wgpu` holds one of these for the region `GPUBuffer.getMappedRange` returned
+    /// and builds [`Uint8Array`] views onto it; the bytes themselves stay in the
+    /// browser until something copies them out.
+    ///
+    /// The `byteLength` getter is a property read rather than
+    /// `napi_get_arraybuffer_info`, which would also hand back a pointer into the
+    /// backing store that nothing here should hold.
+    ArrayBuffer: [Object, JsValue],
+    instanceof(value) { is_arraybuffer(value) },
+    resolves_to Self,
+}
+
+impl ArrayBuffer {
+    /// `new ArrayBuffer(length)`.
+    pub fn new(length: u32) -> Self {
+        super::construct(c"ArrayBuffer", &[JsValue::from(length)], "new ArrayBuffer")
+    }
+
+    /// The buffer's `byteLength`, or `0` if it has been detached.
+    pub fn byte_length(&self) -> u32 {
+        super::get_property(self.js(), c"byteLength", "ArrayBuffer.byteLength")
+    }
+}
+
+/// Whether `value` is an `ArrayBuffer`.
+///
+/// `napi_is_arraybuffer` rather than `instanceof`, so a buffer from another realm —
+/// which is what a browser-created buffer may well be — is recognised.
+fn is_arraybuffer(value: &JsValue) -> bool {
+    if !value.is_object() {
+        return false;
+    }
+    env::scope(|env| {
+        // SAFETY: inside a handle scope on `env`.
+        unsafe {
+            let value = value.to_napi(env)?;
+            let mut result = false;
+            env::check(
+                sys::napi_is_arraybuffer(env, value, &mut result),
+                "napi_is_arraybuffer",
+            )?;
+            Ok(result)
+        }
+    })
+    .unwrap_or(false)
+}
+
+/// Emits one typed array type over `$element`, with `$kind` its Node-API tag.
+///
+/// The JavaScript class name is the Rust name, which is why `$class` and `$name`
+/// look redundant: `$class` is the C string the constructor is looked up by.
+macro_rules! typed_array {
+    (
+        $(#[$doc:meta])*
+        $name:ident($element:ty, $class:expr, $kind:expr)
+    ) => {
+        js_type! {
+            $(#[$doc])*
+            $name: [Object, JsValue],
+            instanceof(value) { is_typedarray(value, $kind) },
+            resolves_to Self,
+        }
+
+        impl $name {
+            /// `new` from anything the constructor accepts: a length, an
+            /// `ArrayBuffer`, or an iterable of numbers.
+            pub fn new(constructor_argument: &JsValue) -> Self {
+                super::construct(
+                    $class,
+                    core::slice::from_ref(constructor_argument),
+                    concat!("new ", stringify!($name)),
+                )
+            }
+
+            /// A new array of `length` elements, zero-filled.
+            pub fn new_with_length(length: u32) -> Self {
+                super::construct(
+                    $class,
+                    &[JsValue::from(length)],
+                    concat!("new ", stringify!($name)),
+                )
+            }
+
+            /// A view onto `buffer` starting at `byte_offset` and running to its end.
+            ///
+            /// A real JavaScript view: no bytes are copied.
+            pub fn new_with_byte_offset(buffer: &JsValue, byte_offset: u32) -> Self {
+                super::construct(
+                    $class,
+                    &[buffer.clone(), JsValue::from(byte_offset)],
+                    concat!("new ", stringify!($name)),
+                )
+            }
+
+            /// A view onto `buffer` of `length` elements starting at `byte_offset`.
+            ///
+            /// A real JavaScript view: no bytes are copied.
+            pub fn new_with_byte_offset_and_length(
+                buffer: &JsValue,
+                byte_offset: u32,
+                length: u32,
+            ) -> Self {
+                super::construct(
+                    $class,
+                    &[
+                        buffer.clone(),
+                        JsValue::from(byte_offset),
+                        JsValue::from(length),
+                    ],
+                    concat!("new ", stringify!($name)),
+                )
+            }
+
+            /// The `ArrayBuffer` this view reads from.
+            pub fn buffer(&self) -> ArrayBuffer {
+                rt::cast(rt::unwrap_js(
+                    rt::get(self.js(), c"buffer"),
+                    concat!(stringify!($name), ".buffer"),
+                ))
+            }
+
+            /// The number of elements in the view.
+            pub fn length(&self) -> u32 {
+                super::get_property(
+                    self.js(),
+                    c"length",
+                    concat!(stringify!($name), ".length"),
+                )
+            }
+
+            /// The size of the view in bytes.
+            pub fn byte_length(&self) -> u32 {
+                super::get_property(
+                    self.js(),
+                    c"byteLength",
+                    concat!(stringify!($name), ".byteLength"),
+                )
+            }
+
+            /// The view's offset within its `ArrayBuffer`, in bytes.
+            pub fn byte_offset(&self) -> u32 {
+                super::get_property(
+                    self.js(),
+                    c"byteOffset",
+                    concat!(stringify!($name), ".byteOffset"),
+                )
+            }
+
+            /// `this.subarray(begin, end)`: another view onto the same buffer.
+            pub fn subarray(&self, begin: u32, end: u32) -> Self {
+                super::call_method(
+                    self.js(),
+                    c"subarray",
+                    &[JsValue::from(begin), JsValue::from(end)],
+                    concat!(stringify!($name), ".subarray"),
+                )
+            }
+
+            /// `this.set(src, offset)`: stores `src`'s elements into this view.
+            ///
+            /// JavaScript's own `set`, so the store lands in whatever the view reads
+            /// from — see [`Uint8Array`] for why this is not done through a data
+            /// pointer.
+            pub fn set(&self, src: &JsValue, offset: u32) {
+                let _: () = super::call_method(
+                    self.js(),
+                    c"set",
+                    &[src.clone(), JsValue::from(offset)],
+                    concat!(stringify!($name), ".set"),
+                );
+            }
+
+            /// A JavaScript typed array holding a **copy** of `rust`.
+            ///
+            /// Unlike wasm-bindgen's, this is not a window onto wasm memory; see
+            /// [`Uint8Array`].
+            ///
+            /// # Safety
+            ///
+            /// None. `js-sys` declares this `unsafe` because its result aliases wasm
+            /// memory, and the signature is kept so that callers written against
+            /// `js-sys` compile unchanged; this implementation copies, so there is
+            /// nothing for a caller to uphold.
+            pub unsafe fn view(rust: &[$element]) -> Self {
+                Self::from_slice(rust)
+            }
+
+            /// A JavaScript typed array holding a copy of `slice`.
+            fn from_slice(slice: &[$element]) -> Self {
+                let byte_length = core::mem::size_of_val(slice);
+                let created = env::scope(|env| {
+                    // SAFETY: inside a handle scope on `env`. `napi_create_arraybuffer`
+                    // reports the backing store of the buffer it just created, which
+                    // is `byte_length` writable bytes owned by nothing else yet, and
+                    // `napi_create_typedarray` is given that same buffer with a zero
+                    // offset and a matching element count.
+                    unsafe {
+                        let mut data = ptr::null_mut();
+                        let mut buffer = ptr::null_mut();
+                        env::check(
+                            sys::napi_create_arraybuffer(
+                                env,
+                                byte_length,
+                                &mut data,
+                                &mut buffer,
+                            ),
+                            "napi_create_arraybuffer",
+                        )?;
+                        if byte_length != 0 && !data.is_null() {
+                            ptr::copy_nonoverlapping(
+                                slice.as_ptr().cast::<u8>(),
+                                data.cast::<u8>(),
+                                byte_length,
+                            );
+                        }
+                        let mut array = ptr::null_mut();
+                        env::check(
+                            sys::napi_create_typedarray(
+                                env,
+                                $kind,
+                                slice.len(),
+                                buffer,
+                                0,
+                                &mut array,
+                            ),
+                            "napi_create_typedarray",
+                        )?;
+                        Ok(JsValue::from_napi(env, array))
+                    }
+                });
+                rt::cast(rt::unwrap_js(
+                    created,
+                    concat!("creating a JavaScript ", stringify!($name)),
+                ))
+            }
+
+            /// Copies this view's elements into `dst`.
+            ///
+            /// # Panics
+            ///
+            /// If `dst` is not exactly as long as this view.
+            pub fn copy_to(&self, dst: &mut [$element]) {
+                let length = self.length() as usize;
+                assert_eq!(
+                    length,
+                    dst.len(),
+                    concat!(stringify!($name), "::copy_to needs a destination of the \
+                             same length as the view")
+                );
+                let copied = env::scope(|env| {
+                    // SAFETY: inside a handle scope on `env`. `typedarray_elements`
+                    // returns a pointer to the view's first element, aligned for that
+                    // element type, only once it has confirmed the element type is
+                    // `$kind`; the copy reads it as `$element` and never more elements
+                    // than both sides hold.
+                    unsafe {
+                        let (data, available) = typedarray_elements(env, self.js(), $kind)?;
+                        let count = available.min(dst.len());
+                        if count != 0 && !data.is_null() {
+                            ptr::copy_nonoverlapping(
+                                data.cast::<$element>(),
+                                dst.as_mut_ptr(),
+                                count,
+                            );
+                        }
+                        Ok(())
+                    }
+                });
+                rt::unwrap_js(copied, concat!("reading a JavaScript ", stringify!($name)));
+            }
+
+            /// Copies `src` into this view.
+            ///
+            /// # Panics
+            ///
+            /// If `src` is not exactly as long as this view.
+            pub fn copy_from(&self, src: &[$element]) {
+                assert_eq!(
+                    self.length() as usize,
+                    src.len(),
+                    concat!(stringify!($name), "::copy_from needs a source of the same \
+                             length as the view")
+                );
+                self.set(Self::from_slice(src).js(), 0);
+            }
+
+            /// This view's elements in a new vector.
+            pub fn to_vec(&self) -> Vec<$element> {
+                // Allocated before the handle scope opens: `copy_to` holds a raw
+                // pointer into the runtime's memory, and nothing else should run
+                // while it does.
+                let mut out: Vec<$element> = alloc::vec![0; self.length() as usize];
+                self.copy_to(&mut out);
+                out
+            }
+        }
+
+        impl From<&[$element]> for $name {
+            fn from(slice: &[$element]) -> Self {
+                Self::from_slice(slice)
+            }
+        }
+    };
+}
+
+typed_array! {
+    /// The JavaScript `Uint8Array`.
+    ///
+    /// This is how mapped buffer contents cross the boundary: `wgpu` keeps one over
+    /// the `ArrayBuffer` from `GPUBuffer.getMappedRange` and copies through it in
+    /// both directions.
+    ///
+    /// # Copy semantics
+    ///
+    /// wasm-bindgen's [`Uint8Array::view`] hands JavaScript a **window onto wasm
+    /// linear memory**: its glue holds the module's `WebAssembly.Memory`, so it can
+    /// construct `new Uint8Array(memory.buffer, ptr, len)` and no bytes move. Writes
+    /// through that view land in the Rust slice, which is why its safety contract is
+    /// about the memory being resized underneath it.
+    ///
+    /// Node-API has no such handle. Its only way to put bytes into a typed array is
+    /// `napi_create_arraybuffer`, which allocates a *new* backing store and reports a
+    /// pointer to it. So [`Uint8Array::view`] here **copies**: the result is a
+    /// snapshot of the slice, disconnected from Rust memory. The `unsafe` signature is
+    /// kept so callers written against `js-sys` compile unchanged, but this
+    /// implementation has no safety requirement and the aliasing hazard the
+    /// wasm-bindgen version warns about does not exist. `wgpu`'s one caller
+    /// immediately does `actual_mapping.set(&view, 0)`, which still ends with the
+    /// right bytes in the right place, at the cost of one extra copy.
+    ///
+    /// Reading is the mirror image: [`Uint8Array::copy_to`] and
+    /// [`Uint8Array::to_vec`] ask `napi_get_typedarray_info` for the element pointer
+    /// and copy out of it.
+    ///
+    /// Only the Rust⇄JavaScript crossing copies. Views *created in JavaScript* —
+    /// [`Uint8Array::new_with_byte_offset_and_length`] and [`Uint8Array::subarray`],
+    /// which are `new Uint8Array(buffer, offset, length)` and `subarray` — are
+    /// ordinary zero-copy JavaScript views onto their `ArrayBuffer`, exactly as on the
+    /// web.
+    ///
+    /// Writes never go through a data pointer: [`Uint8Array::set`] calls JavaScript's
+    /// own `TypedArray.prototype.set`. A pointer obtained for a buffer that does not
+    /// live in wasm memory may be a staging copy the runtime has no obligation to
+    /// write back, so the JavaScript method is the only way to be sure the store
+    /// lands.
+    Uint8Array(u8, c"Uint8Array", sys::TypedarrayType::uint8_array)
+}
+
+typed_array! {
+    /// The JavaScript `Uint32Array`.
+    ///
+    /// Declared by the generated bindings for the `setBindGroup` overload that takes
+    /// a typed array of dynamic offsets. `wgpu` calls the `u32` slice overload
+    /// instead, so nothing constructs one of these today.
+    Uint32Array(u32, c"Uint32Array", sys::TypedarrayType::uint32_array)
+}
+
+/// Whether `value` is a typed array of `kind`.
+///
+/// `napi_get_typedarray_info` rather than `instanceof`, so a typed array from
+/// another realm is recognised and a `Uint8Array` is not mistaken for a
+/// `Uint32Array`.
+fn is_typedarray(value: &JsValue, kind: sys::napi_typedarray_type) -> bool {
+    if !value.is_object() {
+        return false;
+    }
+    env::scope(|env| {
+        // SAFETY: inside a handle scope on `env`, and the element query is only made
+        // for a value `napi_is_typedarray` accepted. The pointer it returns is
+        // discarded, so nothing outlives the scope.
+        unsafe {
+            let raw = value.to_napi(env)?;
+            let mut is_typedarray = false;
+            env::check(
+                sys::napi_is_typedarray(env, raw, &mut is_typedarray),
+                "napi_is_typedarray",
+            )?;
+            // A different element type makes the element query fail, which is the same
+            // answer as "not this type".
+            Ok(is_typedarray && typedarray_elements(env, value, kind).is_ok())
+        }
+    })
+    .unwrap_or(false)
+}
+
+/// The first element of a typed array and how many elements follow it.
+///
+/// The pointer Node-API reports is already adjusted by the view's `byteOffset`, so
+/// it addresses element zero of the view rather than of the underlying buffer.
+///
+/// # Safety
+///
+/// Must be called inside a handle scope on `env`. The returned pointer is only valid
+/// inside that scope, and only for reading `kind`-sized elements.
+unsafe fn typedarray_elements(
+    env: sys::napi_env,
+    value: &JsValue,
+    kind: sys::napi_typedarray_type,
+) -> Result<(*mut core::ffi::c_void, usize), JsValue> {
+    let value = value.to_napi(env)?;
+    let mut actual = 0;
+    let mut length = 0;
+    let mut data = ptr::null_mut();
+    let mut buffer = ptr::null_mut();
+    let mut byte_offset = 0;
+    env::check(
+        sys::napi_get_typedarray_info(
+            env,
+            value,
+            &mut actual,
+            &mut length,
+            &mut data,
+            &mut buffer,
+            &mut byte_offset,
+        ),
+        "napi_get_typedarray_info",
+    )?;
+    if actual != kind {
+        // Reading a `Uint32Array` as bytes (or the reverse) would misread every
+        // element, so this is a hard error rather than a best-effort copy.
+        return Err(JsValue::from_str(
+            "wgpu-napi-web: typed array has a different element type than the \
+             binding declares",
+        ));
+    }
+    Ok((data, length))
+}

@@ -5,6 +5,8 @@ use core::{
     ops::{Bound, Range, RangeBounds},
 };
 
+#[cfg(webgpu)]
+use crate::js::js_sys;
 use crate::util::Mutex;
 use crate::*;
 

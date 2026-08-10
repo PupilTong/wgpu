@@ -1,0 +1,21 @@
+[package]
+name = "wgpu-napi-web-macro"
+version.workspace = true
+edition.workspace = true
+description = "The `#[wasm_bindgen]` attribute subset used by wgpu's vendored WebGPU bindings, lowered onto Node-API"
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full", "extra-traits"] }
+
+[lints]
+workspace = true

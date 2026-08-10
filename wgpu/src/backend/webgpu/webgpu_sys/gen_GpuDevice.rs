@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = EventTarget , extends = :: js_sys :: Object , js_name = GPUDevice , typescript_type = "GPUDevice")]
+    # [wasm_bindgen (extends = EventTarget , extends = js_sys:: Object , js_name = GPUDevice , typescript_type = "GPUDevice")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuDevice` class."]
     #[doc = ""]
@@ -91,7 +92,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn lost(this: &GpuDevice) -> ::js_sys::Promise<GpuDeviceLostInfo>;
+    pub fn lost(this: &GpuDevice) -> js_sys::Promise<GpuDeviceLostInfo>;
 
     # [wasm_bindgen (structural , method , getter , js_class = "GPUDevice" , js_name = onuncapturederror)]
     #[doc = "Getter for the `onuncapturederror` field of this object."]
@@ -102,7 +103,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn onuncapturederror(this: &GpuDevice) -> Option<::js_sys::Function>;
+    pub fn onuncapturederror(this: &GpuDevice) -> Option<js_sys::Function>;
 
     # [wasm_bindgen (structural , method , setter , js_class = "GPUDevice" , js_name = onuncapturederror)]
     #[doc = "Setter for the `onuncapturederror` field of this object."]
@@ -113,7 +114,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_onuncapturederror(this: &GpuDevice, value: Option<&::js_sys::Function>);
+    pub fn set_onuncapturederror(this: &GpuDevice, value: Option<&js_sys::Function>);
 
     # [wasm_bindgen (structural , method , getter , js_class = "GPUDevice" , js_name = label)]
     #[doc = "Getter for the `label` field of this object."]
@@ -228,7 +229,7 @@ extern "C" {
     pub fn create_compute_pipeline_async(
         this: &GpuDevice,
         descriptor: &GpuComputePipelineDescriptor,
-    ) -> ::js_sys::Promise<GpuComputePipeline>;
+    ) -> js_sys::Promise<GpuComputePipeline>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = createPipelineLayout)]
     #[doc = "The `createPipelineLayout()` method."]
@@ -298,7 +299,7 @@ extern "C" {
     pub fn create_render_pipeline_async(
         this: &GpuDevice,
         descriptor: &GpuRenderPipelineDescriptor,
-    ) -> ::js_sys::Promise<GpuRenderPipeline>;
+    ) -> js_sys::Promise<GpuRenderPipeline>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = createSampler)]
     #[doc = "The `createSampler()` method."]
@@ -387,7 +388,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn pop_error_scope(this: &GpuDevice) -> ::js_sys::Promise<::js_sys::JsOption<GpuError>>;
+    pub fn pop_error_scope(this: &GpuDevice) -> js_sys::Promise<js_sys::JsOption<GpuError>>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUDevice" , js_name = pushErrorScope)]
     #[doc = "The `pushErrorScope()` method."]

@@ -27,7 +27,8 @@ pub mod gpu_map_mode {
     #![allow(unused_imports)]
     #![allow(clippy::all)]
     use super::super::*;
-    use wasm_bindgen::prelude::*;
+    use crate::js::js_sys;
+    use crate::js::wasm_bindgen::{self, prelude::*};
 
     #[doc = "The `GPUMapMode.READ` const."]
     #[doc = ""]

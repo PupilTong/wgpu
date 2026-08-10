@@ -153,6 +153,46 @@ const WEB_SYS_FEATURES_NEEDED: &[&str] = &[
     "WgslLanguageFeatures",
 ];
 
+/// Points a freshly vendored file's JavaScript crate paths at `crate::js`.
+///
+/// `wgpu` names `wasm_bindgen`, `js_sys`, `web_sys` and `wasm_bindgen_futures` in
+/// exactly one place (`wgpu/src/js.rs`) so that a single `cfg` can swap the whole
+/// family for the Node-API shim on WASI, where wasm-bindgen has no loader. The
+/// generated files are the bulk of that surface, so the rewrite happens here rather
+/// than by hand:
+///
+/// * the prelude import gains the aliases, and `js_sys` with it — these files carry
+///   `#![allow(unused_imports)]`, so importing it unconditionally costs nothing;
+/// * fully-qualified `::js_sys::…` paths lose their leading `::`, since a leading
+///   `::` reaches the extern prelude and would bypass the module-scope alias.
+///   `#[wasm_bindgen(extends = ::js_sys::Object)]` becomes `extends = js_sys::Object`,
+///   which both the real attribute macro and the shim's accept.
+///
+/// Keep this in sync with `wgpu/src/js.rs`.
+fn route_js_crates_through_alias(file_contents: &str) -> String {
+    const PRELUDE_IMPORT: &str = "use wasm_bindgen::prelude::*;";
+    const PRELUDE_REPLACEMENT: &str =
+        "use crate::js::js_sys;\nuse crate::js::wasm_bindgen::{self, prelude::*};";
+
+    // The leading `::` is stripped first, because the replacement import itself
+    // contains `crate::js::wasm_bindgen::` and must not be rewritten in turn.
+    //
+    // web-sys writes attribute arguments with spaces around the separators
+    // (`:: js_sys :: Object`) and types without (`::js_sys::Array`).
+    let mut rewritten = file_contents.to_owned();
+    for (qualified, unqualified) in [
+        (":: js_sys ::", "js_sys::"),
+        ("::js_sys::", "js_sys::"),
+        (":: web_sys ::", "web_sys::"),
+        ("::web_sys::", "web_sys::"),
+        (":: wasm_bindgen ::", "wasm_bindgen::"),
+        ("::wasm_bindgen::", "wasm_bindgen::"),
+    ] {
+        rewritten = rewritten.replace(qualified, unqualified);
+    }
+    rewritten.replace(PRELUDE_IMPORT, PRELUDE_REPLACEMENT)
+}
+
 pub(crate) fn run_vendor_web_sys(shell: Shell, mut args: Arguments) -> anyhow::Result<()> {
     // -- Argument Parsing --
 
@@ -286,6 +326,7 @@ pub(crate) fn run_vendor_web_sys(shell: Shell, mut args: Arguments) -> anyhow::R
             .context("Could not read file")?;
 
         let mut file_contents = regex.replace_all(&file_contents, "").to_string();
+        file_contents = route_js_crates_through_alias(&file_contents);
         file_contents.insert_str(0, &file_prefix);
 
         shell
@@ -294,6 +335,9 @@ pub(crate) fn run_vendor_web_sys(shell: Shell, mut args: Arguments) -> anyhow::R
     }
 
     eprintln!("# Writing mod.rs file");
+
+    // Keep in sync with `route_js_crates_through_alias`: `mod.rs` names `web_sys`
+    // the same way the generated files name `wasm_bindgen` and `js_sys`.
 
     let mut module_file_contents = format!(
         "\
@@ -305,7 +349,7 @@ pub(crate) fn run_vendor_web_sys(shell: Shell, mut args: Arguments) -> anyhow::R
     );
 
     module_file_contents
-        .push_str("use web_sys::{Event, EventTarget, HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, OffscreenCanvas, ImageBitmap, ImageData, VideoFrame};\n");
+        .push_str("use crate::js::web_sys::{Event, EventTarget, HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, OffscreenCanvas, ImageBitmap, ImageData, VideoFrame};\n");
 
     for &feature in WEB_SYS_FEATURES_NEEDED {
         module_file_contents.push_str(&format!("mod gen_{feature};\n"));
@@ -316,11 +360,17 @@ pub(crate) fn run_vendor_web_sys(shell: Shell, mut args: Arguments) -> anyhow::R
 
     eprintln!("# Formatting files");
 
-    shell
+    // The generated files are formatted too, not just `mod.rs`:
+    // `route_js_crates_through_alias` shortens the paths it rewrites, which changes
+    // where lines wrap. Without this the vendored output would differ from what is
+    // checked in by whitespace alone, and `cargo fmt --check` would fail.
+    let mut rustfmt = shell
         .cmd("rustfmt")
-        .arg(format!("{WEBGPU_SYS_PATH}/mod.rs"))
-        .run()
-        .context("could not format")?;
+        .arg(format!("{WEBGPU_SYS_PATH}/mod.rs"));
+    for &feature in WEB_SYS_FEATURES_NEEDED {
+        rustfmt = rustfmt.arg(format!("{WEBGPU_SYS_PATH}/gen_{feature}.rs"));
+    }
+    rustfmt.run().context("could not format")?;
 
     if !no_cleanup {
         // We only need to remove this if we cloned it in the first place.

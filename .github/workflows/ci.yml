@@ -195,6 +195,21 @@ jobs:
             tier: 3
             extra-flags: -Zbuild-std=std,panic_abort
 
+          # WASI, where the WebGPU backend reaches JavaScript through Node-API
+          # (napi-rs / emnapi) instead of wasm-bindgen. Both threading models are
+          # built because `@napi-rs/wasm-runtime` supports both.
+          - name: WebAssembly WASI
+            os: ubuntu-24.04
+            target: wasm32-wasip1
+            tier: 2
+            kind: napi-web
+
+          - name: WebAssembly WASI threads
+            os: ubuntu-24.04
+            target: wasm32-wasip1-threads
+            tier: 2
+            kind: napi-web
+
           - name: Emscripten
             os: ubuntu-24.04
             target: wasm32-unknown-emscripten
@@ -300,6 +315,26 @@ jobs:
           # all features
           cargo --locked clippy --target ${{ matrix.target }} ${{ matrix.extra-flags }} --tests --all-features
           cargo --locked doc --target ${{ matrix.target }} ${{ matrix.extra-flags }} --no-deps --all-features
+
+      # WASI has no wasm-bindgen loader, so the only configuration worth building
+      # is the Node-API one. `wgpu-napi-web` is checked on its own as well: it is
+      # the crate that actually contains the Node-API calls, and nothing else in
+      # the workspace compiles it.
+      - name: Check `napi-web`
+        if: matrix.kind == 'napi-web'
+        shell: bash
+        run: |
+          set -e
+
+          cargo --locked clippy --target ${{ matrix.target }} -p wgpu-napi-web -p wgpu-napi-web-macro
+          cargo --locked clippy --target ${{ matrix.target }} -p wgpu --no-default-features --features napi-web,wgsl
+          cargo --locked doc --target ${{ matrix.target }} -p wgpu-napi-web -p wgpu-napi-web-macro --no-deps
+
+          # No `cargo doc` for `wgpu` itself here: a backend-only feature set leaves
+          # four doc links in `wgpu` pointing at `wgpu-hal` items that such a build
+          # does not have, and `RUSTDOCFLAGS: -D warnings` would fail on that
+          # pre-existing debt. The `web` job documents `wgpu` with `--all-features`,
+          # where those links resolve.
 
       # Building for platforms where the tests do not compile.
       - name: Check `wgpu` only

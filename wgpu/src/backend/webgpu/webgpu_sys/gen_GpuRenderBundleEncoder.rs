@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPURenderBundleEncoder , typescript_type = "GPURenderBundleEncoder")]
+    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPURenderBundleEncoder , typescript_type = "GPURenderBundleEncoder")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuRenderBundleEncoder` class."]
     #[doc = ""]
@@ -113,7 +114,7 @@ extern "C" {
         this: &GpuRenderBundleEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets: &[::js_sys::Number],
+        dynamic_offsets: &[js_sys::Number],
     );
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPURenderBundleEncoder" , js_name = setBindGroup)]
@@ -147,7 +148,7 @@ extern "C" {
         this: &GpuRenderBundleEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets_data: &::js_sys::Uint32Array,
+        dynamic_offsets_data: &js_sys::Uint32Array,
         dynamic_offsets_data_start: u32,
         dynamic_offsets_data_length: u32,
     ) -> Result<(), JsValue>;
@@ -183,7 +184,7 @@ extern "C" {
         this: &GpuRenderBundleEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets_data: &::js_sys::Uint32Array,
+        dynamic_offsets_data: &js_sys::Uint32Array,
         dynamic_offsets_data_start: f64,
         dynamic_offsets_data_length: u32,
     ) -> Result<(), JsValue>;

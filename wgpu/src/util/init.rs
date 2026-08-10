@@ -1,5 +1,7 @@
 use crate::{Adapter, Instance, RequestAdapterOptions, Surface};
 
+#[cfg(webgpu)]
+use crate::js::wasm_bindgen_futures;
 #[cfg(doc)]
 use crate::Backends;
 

@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUBindGroupEntry)]
+    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUBindGroupEntry)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuBindGroupEntry` dictionary."]
     #[doc = ""]
@@ -61,7 +62,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "resource")]
-    pub fn get_resource(this: &GpuBindGroupEntry) -> ::wasm_bindgen::JsValue;
+    pub fn get_resource(this: &GpuBindGroupEntry) -> wasm_bindgen::JsValue;
 
     #[doc = "Change the `resource` field of this object."]
     #[doc = ""]
@@ -127,7 +128,7 @@ impl GpuBindGroupEntry {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(binding: u32, resource: &GpuSampler) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
         ret.set_binding(binding);
         ret.set_resource(resource);
         ret
@@ -141,7 +142,7 @@ impl GpuBindGroupEntry {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_gpu_texture(binding: u32, resource: &GpuTexture) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
         ret.set_binding(binding);
         ret.set_resource_gpu_texture(resource);
         ret
@@ -155,7 +156,7 @@ impl GpuBindGroupEntry {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_gpu_texture_view(binding: u32, resource: &GpuTextureView) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
         ret.set_binding(binding);
         ret.set_resource_gpu_texture_view(resource);
         ret
@@ -169,7 +170,7 @@ impl GpuBindGroupEntry {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_gpu_buffer(binding: u32, resource: &GpuBuffer) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
         ret.set_binding(binding);
         ret.set_resource_gpu_buffer(resource);
         ret
@@ -183,7 +184,7 @@ impl GpuBindGroupEntry {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_gpu_buffer_binding(binding: u32, resource: &GpuBufferBinding) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
         ret.set_binding(binding);
         ret.set_resource_gpu_buffer_binding(resource);
         ret
@@ -197,7 +198,7 @@ impl GpuBindGroupEntry {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_gpu_external_texture(binding: u32, resource: &GpuExternalTexture) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
+        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
         ret.set_binding(binding);
         ret.set_resource_gpu_external_texture(resource);
         ret

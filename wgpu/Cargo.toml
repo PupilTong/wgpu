@@ -85,6 +85,19 @@ vulkan-portability = ["wgpu-core?/vulkan-portability"]
 ## Enables the GLES backend on WebAssembly only.
 webgl = ["web", "wgpu-core/webgl", "dep:wgpu-hal", "dep:smallvec"]
 
+## Reaches JavaScript through Node-API (napi-rs / emnapi) instead of wasm-bindgen,
+## for `wasm32-wasip1` and `wasm32-wasip1-threads`.
+##
+## WASI modules cannot use wasm-bindgen: its imports are satisfied by JS glue that
+## `wasm-bindgen-cli` only emits for `wasm32-unknown-unknown`, so a WASI build
+## against it compiles but cannot be instantiated. With this feature the
+## [`webgpu`](#webgpu) backend calls the very same `navigator.gpu` objects through
+## Node-API, which is what a napi-rs addon (`@napi-rs/wasm-runtime` + emnapi) has
+## available in the browser.
+##
+## Requires `webgpu`, and has no effect on any target other than WASI.
+napi-web = ["webgpu", "std", "dep:wgpu-napi-web", "wgpu-types/napi-web"]
+
 #! ### Backend features
 
 ## Support creating textures from DRM display/window handles.
@@ -260,6 +273,14 @@ smallvec = { workspace = true, optional = true }
 
 # Needed for the webgpu backend. Optional as webgpu is optional on WebAssembly.
 wasm-bindgen-futures = { workspace = true, optional = true }
+
+######################
+# WebAssembly / WASI #
+######################
+[target.'cfg(all(target_family = "wasm", target_os = "wasi"))'.dependencies]
+# The Node-API stand-in for the wasm-bindgen family, selected by the `napi-web`
+# feature. Optional, and only ever resolved for WASI targets.
+wgpu-napi-web = { workspace = true, optional = true }
 
 ##############
 # Emscripten #

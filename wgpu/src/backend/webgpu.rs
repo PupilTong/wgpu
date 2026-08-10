@@ -25,6 +25,10 @@ use core::{
 };
 use wgt::Backends;
 
+// The JS interop layer is named once per crate, so that `napi-web` can swap the
+// whole wasm-bindgen family for its Node-API stand-in. See `crate::js`.
+use crate::js::{js_sys, wasm_bindgen, wasm_bindgen_futures, web_sys};
+
 use js_sys::Promise;
 use wasm_bindgen::{prelude::*, JsCast};
 
@@ -950,14 +954,14 @@ fn map_js_sys_limits(limits: &wgt::Limits) -> js_sys::Object<js_sys::Number> {
     macro_rules! set_properties {
         (($from:expr) => ($on:expr) : $(($js_ident:ident, $rs_ident:ident)),* $(,)?) => {
             $(
-                ::js_sys::Reflect::set(
+                js_sys::Reflect::set(
                     &$on,
-                    &::wasm_bindgen::JsValue::from(stringify!($js_ident)),
+                    &wasm_bindgen::JsValue::from(stringify!($js_ident)),
                     // Numbers may be u64, however using `from` on a u64 yields
                     // errors on the wasm side, since it uses an unsupported api.
                     // Wasm sends us things that need to fit into u64s by sending
                     // us f64s instead. So we just send them f64s back.
-                    &::wasm_bindgen::JsValue::from($from.$rs_ident as f64)
+                    &wasm_bindgen::JsValue::from($from.$rs_ident as f64)
                 )
                     .expect("Setting Object properties should never fail.");
             )*
@@ -1256,6 +1260,19 @@ pub fn get_browser_gpu_property(
         let navigator = global
             .unchecked_into::<web_sys::WorkerGlobalScope>()
             .navigator();
+        ext_bindings::NavigatorGpu::gpu(&navigator)
+    } else if cfg!(napi_web) {
+        // The two constructors above are how a browser distinguishes its main
+        // thread from a dedicated worker — the contexts that have `navigator.gpu`.
+        // A Node-API host need not define either while still providing
+        // `navigator.gpu`: Node is `@napi-rs/wasm-runtime`'s other target, and it
+        // has a bare `navigator` and no DOM. With no distinction to make, read the
+        // global `navigator` directly. An absent `navigator` still means the GPU is
+        // unreachable.
+        let navigator = global.unchecked_into::<web_sys::Window>().navigator();
+        if AsRef::<JsValue>::as_ref(&navigator).is_undefined() {
+            return Err(BrowserGpuPropertyInaccessible);
+        }
         ext_bindings::NavigatorGpu::gpu(&navigator)
     } else {
         return Err(BrowserGpuPropertyInaccessible);

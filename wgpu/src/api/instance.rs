@@ -1,6 +1,8 @@
 use alloc::vec::Vec;
 use core::future::Future;
 
+#[cfg(web)]
+use crate::js::wasm_bindgen;
 use crate::{dispatch::InstanceInterface, util::Mutex, *};
 
 bitflags::bitflags! {

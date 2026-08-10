@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUCommandEncoder , typescript_type = "GPUCommandEncoder")]
+    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUCommandEncoder , typescript_type = "GPUCommandEncoder")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuCommandEncoder` class."]
     #[doc = ""]
@@ -421,7 +422,7 @@ extern "C" {
         this: &GpuCommandEncoder,
         source: &GpuTexelCopyBufferInfo,
         destination: &GpuTexelCopyTextureInfo,
-        copy_size: &[::js_sys::Number],
+        copy_size: &[js_sys::Number],
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUCommandEncoder" , js_name = copyBufferToTexture)]
@@ -453,7 +454,7 @@ extern "C" {
         this: &GpuCommandEncoder,
         source: &GpuTexelCopyTextureInfo,
         destination: &GpuTexelCopyBufferInfo,
-        copy_size: &[::js_sys::Number],
+        copy_size: &[js_sys::Number],
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUCommandEncoder" , js_name = copyTextureToBuffer)]
@@ -485,7 +486,7 @@ extern "C" {
         this: &GpuCommandEncoder,
         source: &GpuTexelCopyTextureInfo,
         destination: &GpuTexelCopyTextureInfo,
-        copy_size: &[::js_sys::Number],
+        copy_size: &[js_sys::Number],
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUCommandEncoder" , js_name = copyTextureToTexture)]

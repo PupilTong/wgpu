@@ -22,11 +22,12 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use wasm_bindgen::prelude::*;
+use crate::js::js_sys;
+use crate::js::wasm_bindgen::{self, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPU , typescript_type = "GPU")]
+    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPU , typescript_type = "GPU")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `Gpu` class."]
     #[doc = ""]
@@ -69,7 +70,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn request_adapter(this: &Gpu) -> ::js_sys::Promise<::js_sys::JsOption<GpuAdapter>>;
+    pub fn request_adapter(this: &Gpu) -> js_sys::Promise<js_sys::JsOption<GpuAdapter>>;
 
     # [wasm_bindgen (method , structural , js_class = "GPU" , js_name = requestAdapter)]
     #[doc = "The `requestAdapter()` method."]
@@ -83,5 +84,5 @@ extern "C" {
     pub fn request_adapter_with_options(
         this: &Gpu,
         options: &GpuRequestAdapterOptions,
-    ) -> ::js_sys::Promise<::js_sys::JsOption<GpuAdapter>>;
+    ) -> js_sys::Promise<js_sys::JsOption<GpuAdapter>>;
 }
