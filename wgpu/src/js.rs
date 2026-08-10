@@ -33,8 +33,18 @@ compile_error!(
      objects on one thread instead."
 );
 
+// Each re-export is gated by what actually uses it, because an unused one is a
+// warning and this crate is built with `-D warnings`. `wasm_bindgen` and `web_sys`
+// are reached by surface creation, which any wasm backend needs; `js_sys` and
+// `wasm_bindgen_futures` only by the WebGPU backend — and `wasm-bindgen-futures`
+// is only a dependency when that backend is enabled, so a WebGL-only build has no
+// crate to name here at all.
+#[cfg(all(not(napi_web), webgpu))]
+pub use {::js_sys, ::wasm_bindgen_futures};
 #[cfg(not(napi_web))]
-pub use {::js_sys, ::wasm_bindgen, ::wasm_bindgen_futures, ::web_sys};
+pub use {::wasm_bindgen, ::web_sys};
 
+#[cfg(all(napi_web, webgpu))]
+pub use ::wgpu_napi_web::{js_sys, wasm_bindgen_futures};
 #[cfg(napi_web)]
-pub use ::wgpu_napi_web::{js_sys, wasm_bindgen, wasm_bindgen_futures, web_sys};
+pub use ::wgpu_napi_web::{wasm_bindgen, web_sys};
