@@ -7,12 +7,19 @@ backend works on `wasm32-wasip1` and `wasm32-wasip1-threads`.
 ## Why a WASI build needs this
 
 `wgpu`'s WebGPU backend is a mapping onto JavaScript's WebGPU objects, written
-against wasm-bindgen. Those crates *compile* for every `wasm32` target, but they
-only *work* on `wasm32-unknown-unknown`: each binding is an import from a
-placeholder module that `wasm-bindgen-cli` resolves when it generates the JS glue,
-and that glue is only produced for `wasm32-unknown-unknown`. A WASI build against
-them links and then fails to instantiate, because its imports have nothing to bind
-to. `cargo check` passing therefore proves nothing about a WASI target.
+against wasm-bindgen. Those crates *build* for every `wasm32` target, but they only
+*work* on `wasm32-unknown-unknown`: each binding is an import from a placeholder
+module that `wasm-bindgen-cli` resolves when it generates the JS glue, and that glue
+is only produced for `wasm32-unknown-unknown`.
+
+On WASI, wasm-bindgen takes its non-web path — every binding compiles to a Rust
+function whose body is `panic!("function not implemented on non-wasm32 targets")`
+(`wasm-bindgen/src/lib.rs`, the `externs!` macro). The module builds, links and
+instantiates; the first JavaScript operation aborts it. So `cargo check` passing
+proves nothing about a WASI target, and neither does a successful load. (Between
+0.2.115 and [wasm-bindgen#5175](https://github.com/wasm-bindgen/wasm-bindgen/pull/5175)
+the same build instead emitted unresolved `__wbindgen_placeholder__` imports and
+could not be instantiated at all — a louder failure for the same reason.)
 
 A napi-rs addon reaches JavaScript by another route: the module is loaded by
 `@napi-rs/wasm-runtime`, emnapi implements Node-API against the host's JavaScript,

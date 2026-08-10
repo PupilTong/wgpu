@@ -4,12 +4,16 @@
 //! # Why this exists
 //!
 //! `wgpu`'s WebGPU backend is a thin mapping onto the JavaScript WebGPU objects,
-//! written against `wasm-bindgen`, `js-sys` and `web-sys`. Those crates compile
-//! for any `wasm32` target, but they only *work* on `wasm32-unknown-unknown`:
-//! every binding is a wasm import from a placeholder module that
-//! `wasm-bindgen-cli` resolves when it emits the JS glue, and that glue is only
-//! produced for `wasm32-unknown-unknown`. A WASI build therefore links and then
-//! fails to instantiate — its imports have nothing to bind to.
+//! written against `wasm-bindgen`, `js-sys` and `web-sys`. Those crates build for
+//! any `wasm32` target, but they only *work* on `wasm32-unknown-unknown`: every
+//! binding is a wasm import from a placeholder module that `wasm-bindgen-cli`
+//! resolves when it emits the JS glue, and that glue is only produced for
+//! `wasm32-unknown-unknown`.
+//!
+//! On WASI, wasm-bindgen compiles each binding to a stub whose body is
+//! `panic!("function not implemented on non-wasm32 targets")`. Such a build links
+//! and instantiates, and then aborts on its first JavaScript operation — a
+//! failure that neither `cargo check` nor loading the module reveals.
 //!
 //! A napi-rs addon reaches JavaScript by a different route: the module is loaded
 //! by `@napi-rs/wasm-runtime`, emnapi implements Node-API against the host's

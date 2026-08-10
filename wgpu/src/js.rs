@@ -9,11 +9,12 @@
 //!   `wasm32-unknown-unknown`, where the loader is wasm-bindgen's generated JS
 //!   glue;
 //! * with the `napi-web` feature on `wasm32-wasip1(-threads)`, the
-//!   [`wgpu_napi_web`] shim, which reaches the same JavaScript objects through
+//!   `wgpu-napi-web` shim, which reaches the same JavaScript objects through
 //!   Node-API (napi-rs / emnapi) instead. wasm-bindgen cannot be used there at
-//!   all: its imports are satisfied by glue that only exists for
-//!   `wasm32-unknown-unknown`, so a WASI module built against it links but
-//!   cannot be instantiated.
+//!   all: its bindings are satisfied by glue that only exists for
+//!   `wasm32-unknown-unknown`, and on WASI it compiles them to stubs that panic
+//!   with "function not implemented on non-wasm32 targets" — so such a module
+//!   loads and then aborts on its first JavaScript call.
 //!
 //! The generated bindings under [`crate::backend::webgpu::webgpu_sys`] are
 //! re-vendored from `web-sys` by `cargo xtask vendor-web-sys`, which rewrites

@@ -52,7 +52,7 @@ Bottom level categories:
 
 #### WebGPU
 
-- New `napi-web` feature: the WebGPU backend can reach JavaScript through Node-API (napi-rs / emnapi) instead of wasm-bindgen, which makes `wasm32-wasip1` and `wasm32-wasip1-threads` usable targets. A WASI module cannot use wasm-bindgen at all — its imports are satisfied by glue that `wasm-bindgen-cli` only emits for `wasm32-unknown-unknown`, so such a build links but cannot be instantiated. With this feature the same `navigator.gpu` objects are driven over Node-API, which is what a napi-rs addon has available in the browser. The interop layer lives in the new `wgpu-napi-web` crate; the addon installs its `napi_env` once per thread with `wgpu_napi_web::install`. Nothing changes for any other target.
+- New `napi-web` feature: the WebGPU backend can reach JavaScript through Node-API (napi-rs / emnapi) instead of wasm-bindgen, which makes `wasm32-wasip1` and `wasm32-wasip1-threads` usable targets. A WASI module cannot use wasm-bindgen at all — its bindings are satisfied by glue that `wasm-bindgen-cli` only emits for `wasm32-unknown-unknown`, and on WASI wasm-bindgen compiles them to stubs that panic, so such a build loads and then aborts on its first JavaScript call. With this feature the same `navigator.gpu` objects are driven over Node-API, which is what a napi-rs addon has available in the browser. The interop layer lives in the new `wgpu-napi-web` crate; the addon installs its `napi_env` once per thread with `wgpu_napi_web::install`. Nothing changes for any other target.
 
 #### Hal
 

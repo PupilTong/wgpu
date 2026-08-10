@@ -5,7 +5,8 @@
 //! against wasm-bindgen's attribute. wasm-bindgen turns each declaration in an
 //! `extern "C"` block into a wasm import from a placeholder module, which its CLI
 //! resolves when it emits JavaScript glue — and it only emits that glue for
-//! `wasm32-unknown-unknown`. This attribute accepts the same declarations and emits
+//! `wasm32-unknown-unknown`. On WASI it instead compiles those declarations to
+//! stubs that panic. This attribute accepts the same declarations and emits
 //! the operation the glue would have performed instead: a property read, a property
 //! write, a method call, a construction, made through
 //! [`wgpu_napi_web`](https://docs.rs/wgpu-napi-web)'s Node-API runtime against the
