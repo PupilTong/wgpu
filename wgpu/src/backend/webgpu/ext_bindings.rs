@@ -5,7 +5,6 @@
 //! from the generated web_sys bindings.
 
 use crate::backend::webgpu::webgpu_sys;
-use crate::js::{wasm_bindgen, web_sys};
 use wasm_bindgen::prelude::*;
 
 /// Extension trait for [`web_sys::Navigator`] and [`web_sys::WorkerNavigator`] to

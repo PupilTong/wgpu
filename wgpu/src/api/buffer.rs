@@ -5,10 +5,12 @@ use core::{
     ops::{Bound, Range, RangeBounds},
 };
 
-#[cfg(webgpu)]
-use crate::js::js_sys;
 use crate::util::Mutex;
 use crate::*;
+#[cfg(all(webgpu, not(napi_web)))]
+use js_sys::Uint8Array;
+#[cfg(napi_web)]
+use napi_rs_webgpu::Uint8Array;
 
 /// Handle to a GPU-accessible buffer.
 ///
@@ -1011,7 +1013,7 @@ impl BufferView {
     /// Provides the same data as dereferencing the view, but as a `Uint8Array` in js.
     /// This can be MUCH faster than dereferencing the view which copies the data into
     /// the Rust / wasm heap.
-    pub fn as_uint8array(&self) -> &js_sys::Uint8Array {
+    pub fn as_uint8array(&self) -> &Uint8Array {
         self.inner.as_uint8array()
     }
 }

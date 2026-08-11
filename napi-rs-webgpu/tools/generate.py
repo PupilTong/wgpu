@@ -199,6 +199,11 @@ MODULES: dict[str, tuple[str, list[str]]] = {
 ENUM_MODULE = "enums"
 ENUM_MODULE_DOC = "WebGPU's string enums."
 
+# Where the namespace constants go. A WebIDL namespace is a bag of constants with
+# no object behind it, so it needs neither a handle nor a call.
+NAMESPACE_MODULE = "namespaces"
+NAMESPACE_MODULE_DOC = "WebGPU's namespaces, which are constants and nothing else."
+
 # Where a type the tables do not name lands. Reported by the summary.
 FALLBACK_MODULE = "misc"
 FALLBACK_MODULE_DOC = (
@@ -217,11 +222,24 @@ CRATE_TYPES = {
     "js_sys::Uint32Array": "crate::Uint32Array",
     "js_sys::Object": "crate::Object",
     "js_sys::JsValue": "crate::JsValue",
+    "js_sys::JsString": "crate::JsString",
+    "js_sys::Number": "crate::Number",
+    "js_sys::Undefined": "crate::Undefined",
     "wasm_bindgen::JsValue": "crate::JsValue",
     "JsValue": "crate::JsValue",
     # A JavaScript function has no binding of its own: it is held as the value it
     # is and called through `crate::napi::rt::call`.
     "js_sys::Function": "crate::JsValue",
+}
+
+# Types whose generic parameter is part of the crate's spelling too: `Object<T>`
+# names what a `record`'s values are, `JsOption<T>` and `Iterator<T>` what they
+# hold. Everything else in `CRATE_TYPES` is one JavaScript value whatever web-sys
+# writes inside the angle brackets, so its parameters are dropped.
+GENERIC_CRATE_TYPES = {
+    "js_sys::Object": "crate::Object",
+    "js_sys::JsOption": "crate::JsOption",
+    "js_sys::Iterator": "crate::JsIterator",
 }
 
 # `web_sys::X` in the spec, `crate::X` here: `src/dom.rs` declares them.
@@ -264,7 +282,7 @@ PRIMITIVES = {
 }
 
 # --------------------------------------------------------------------------------
-# The two members the extractor mis-parses.
+# The two members the extractor parses wrongly.
 #
 # `FN_DECL` in `tools/extract_surface.py` ends the argument list at the first `)`,
 # which for an argument that is itself a function type is the `)` inside `fn(..)`.
@@ -367,6 +385,14 @@ class Surface:
         self.enums = {
             name: entry for name, entry in spec["enums"].items() if entry["used"]
         }
+        self.namespaces = {
+            name: dict(
+                entry,
+                constants=[c for c in entry["constants"] if c["used"]],
+            )
+            for name, entry in spec.get("namespaces", {}).items()
+            if entry["used"]
+        }
         self.interfaces: dict[str, dict] = {}
         self.dictionaries: set[str] = set()
         for name, entry in spec["interfaces"].items():
@@ -427,7 +453,7 @@ class Types:
         head, args = parse_generic(text)
         if head == "js_sys::Array":
             return f"&[{self.value(args[0])}]"
-        if head in ("Option", "js_sys::JsOption"):
+        if head == "Option":
             # The reference is inside the `Option`, so recurse through `argument`.
             return f"Option<{self.argument(args[0])}>"
         return self.value(text)
@@ -437,19 +463,23 @@ class Types:
         text = normalize(text)
         head, args = parse_generic(text)
 
-        if head in ("Option", "js_sys::JsOption"):
+        # A Rust `Option` in the spec is web-sys' optional *argument*, not WebIDL
+        # nullability; `js_sys::JsOption` is the nullable JavaScript slot and is
+        # handled with the other generic types below.
+        if head == "Option":
             return f"Option<{self.argument(args[0])}>"
         if head == "js_sys::Promise":
             return f"crate::Promise<{self.value(args[0])}>" if args else "crate::Promise"
-        # An iterator and an array both arrive as a whole sequence: `rt::array_items`
-        # collects one, so both are a `Vec` on the Rust side.
-        if head in ("js_sys::Array", "js_sys::Iterator"):
+        # An array arrives as a whole sequence — `rt::array_items` collects one — so
+        # it is a `Vec` on the Rust side. An iterator is not: it is walked a step at
+        # a time, and keeps its JavaScript identity.
+        if head == "js_sys::Array":
             return f"alloc::vec::Vec<{self.value(args[0])}>"
-        if head in ("js_sys::JsString", "alloc::string::String", "String"):
+        if head in GENERIC_CRATE_TYPES and args:
+            inner = ", ".join(self.value(argument) for argument in args)
+            return f"{GENERIC_CRATE_TYPES[head]}<{inner}>"
+        if head in ("alloc::string::String", "String"):
             return "alloc::string::String"
-        if head == "js_sys::Undefined":
-            # WebIDL `undefined` is Rust's unit.
-            return "()"
         if head in CRATE_TYPES:
             # The generic parameter, if any, is web-sys describing the contents; one
             # JavaScript object either way.
@@ -682,6 +712,31 @@ def emit_enum(name: str, entry: dict) -> list[str]:
     return lines
 
 
+def emit_namespace(name: str, entry: dict) -> list[str]:
+    """One WebIDL namespace: a module of constants.
+
+    `GPUMapMode.READ` is a JavaScript property read in principle and a compile-time
+    constant in practice — the values are fixed by the specification — so this
+    emits them as `const`s, exactly as web-sys does.
+    """
+    js_name = derived_class("".join(part.title() for part in name.split("_")))
+    lines = [
+        f"/// The `{js_name}` namespace.",
+        "///",
+        f"/// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/{js_name})",
+        f"pub mod {name} {{",
+    ]
+    for index, constant in enumerate(entry["constants"]):
+        if index:
+            lines.append("")
+        lines += [
+            f'    /// The `{js_name}.{constant["name"]}` const.',
+            f'    pub const {constant["name"]}: {constant["type"]} = {constant["value"]};',
+        ]
+    lines.append("}")
+    return lines
+
+
 def imports(module: str, referenced: set[str], home: dict[str, str]) -> list[str]:
     """`use` lines for the generated types this module names but does not declare."""
     by_module: dict[str, list[str]] = {}
@@ -769,6 +824,16 @@ def main() -> int:
         body += emit_enum(name, surface.enums[name])
     contents[ENUM_MODULE] = render(ENUM_MODULE, ENUM_MODULE_DOC, body, [])
 
+    if surface.namespaces:
+        body = []
+        for name in sorted(surface.namespaces):
+            if body:
+                body.append("")
+            body += emit_namespace(name, surface.namespaces[name])
+        contents[NAMESPACE_MODULE] = render(
+            NAMESPACE_MODULE, NAMESPACE_MODULE_DOC, body, []
+        )
+
     mod_body = [f"mod {module};" for module in sorted(contents)]
     mod_body.append("")
     mod_body += [f"pub use {module}::*;" for module in sorted(contents)]
@@ -793,6 +858,8 @@ def main() -> int:
     print(f"dictionaries: {dictionaries:4}")
     print(f"members     : {member_count:4}")
     print(f"enums       : {len(surface.enums):4}  ({variants} variants)")
+    constants = sum(len(entry["constants"]) for entry in surface.namespaces.values())
+    print(f"namespaces  : {len(surface.namespaces):4}  ({constants} constants)")
     if misfiled:
         print(f"\nunfiled, landed in {FALLBACK_MODULE}.rs: {', '.join(misfiled)}")
     return 0

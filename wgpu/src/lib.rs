@@ -259,10 +259,35 @@ mod api;
 mod backend;
 mod cmp;
 mod dispatch;
-#[cfg(any(web, napi_web))]
-mod js;
 mod macros;
 pub mod util;
+
+// On WASI the wasm-bindgen family is not a dependency at all, because it cannot
+// work there: `wasm-bindgen-cli` emits its JS glue for `wasm32-unknown-unknown`
+// only, and on WASI every binding compiles to a stub whose body panics with
+// "function not implemented on non-wasm32 targets" — so such a module loads and
+// then aborts on its first JavaScript call. `napi-web` is how a WASI build reaches
+// JavaScript, and asking for a JavaScript-facing feature without it is refused here
+// rather than at the first import that fails to resolve.
+#[cfg(all(wasi, feature = "web", not(feature = "napi-web")))]
+compile_error!(
+    "wgpu: on `wasm32-wasip1(-threads)` the JavaScript backends need the `napi-web` \
+     feature — wasm-bindgen has no loader for WASI, so a build without it would abort \
+     on its first JavaScript call. Enable `napi-web` alongside `webgpu`."
+);
+
+// `fragile-send-sync-non-atomic-wasm` claims `Send`/`Sync` on the argument that a
+// wasm binary without atomics is single-threaded. That argument does not hold under
+// `napi-web`: `wasm32-wasip1-threads` has real threads yet reports no `atomics`
+// target feature, so the feature would silently mark thread-affine Node-API handles
+// as shareable. A Node-API value belongs to the `napi_env` of one thread, so this is
+// refused rather than left to fail at runtime.
+#[cfg(all(napi_web, send_sync))]
+compile_error!(
+    "wgpu: `fragile-send-sync-non-atomic-wasm` cannot be combined with `napi-web` — \
+     Node-API values are bound to the thread that owns their environment. Keep `wgpu` \
+     objects on one thread instead."
+);
 
 //
 //
@@ -331,11 +356,17 @@ pub use naga;
 pub use raw_window_handle as rwh;
 
 /// Re-export of our `web-sys` dependency.
+#[cfg(all(web, not(napi_web)))]
+pub use web_sys;
+
+/// Re-export of our `napi-rs-webgpu` dependency, which is where the JavaScript
+/// types come from on WASI.
 ///
-/// With the `napi-web` feature this is the Node-API-backed stand-in from the
-/// `wgpu-napi-web` crate rather than the `web-sys` crate.
-#[cfg(any(web, napi_web))]
-pub use crate::js::web_sys;
+/// It takes `web-sys`' place under the [`napi-web`](index.html#optional-features)
+/// feature: the DOM and WebGPU objects it declares are the same JavaScript objects,
+/// reached over Node-API rather than through wasm-bindgen's glue.
+#[cfg(napi_web)]
+pub use napi_rs_webgpu;
 
 /// Vendored WebGPU JS-handle types used by the WebGPU backend.
 ///
@@ -346,7 +377,9 @@ pub use crate::js::web_sys;
 ///
 /// A `web_sys::GpuTexture` from a consumer's own `web-sys` dependency wraps
 /// the same JS object as a `wgpu::webgpu::GpuTexture`; convert between them
-/// with [`wasm_bindgen::JsCast::unchecked_into`].
+/// with `wasm_bindgen::JsCast::unchecked_into` — or, under the
+/// [`napi-web`](index.html#optional-features) feature, with
+/// `napi_rs_webgpu::JsCast::unchecked_into`, which is the same operation.
 #[cfg(webgpu)]
 pub mod webgpu {
     pub use crate::backend::webgpu::webgpu_sys::{

@@ -102,7 +102,7 @@ webgpu_dictionary! {
     /// Change the `usage` field of this object.
     setter set_usage(val: u32) as "usage";
     /// Change the `viewFormats` field of this object.
-    setter set_view_formats(val: &[alloc::string::String]) as "viewFormats";
+    setter set_view_formats(val: &[crate::JsString]) as "viewFormats";
 }
 
 js_type! {
@@ -224,9 +224,9 @@ webgpu_dictionary! {
     /// Change the `label` field of this object.
     setter set_label(val: &str) as "label";
     /// Change the `requiredFeatures` field of this object.
-    setter set_required_features(val: &[alloc::string::String]) as "requiredFeatures";
+    setter set_required_features(val: &[crate::JsString]) as "requiredFeatures";
     /// Change the `requiredLimits` field of this object.
-    setter set_required_limits(val: &crate::Object) as "requiredLimits";
+    setter set_required_limits(val: &crate::Object<crate::Number>) as "requiredLimits";
 }
 
 webgpu_default!(GpuDeviceDescriptor, new);
@@ -288,7 +288,7 @@ js_type! {
 webgpu_dictionary! {
     GpuPipelineLayoutDescriptor;
     /// Construct a new `GpuPipelineLayoutDescriptor`.
-    new new(bind_group_layouts: &[Option<GpuBindGroupLayout>] as "bindGroupLayouts");
+    new new(bind_group_layouts: &[crate::JsOption<GpuBindGroupLayout>] as "bindGroupLayouts");
     /// Change the `label` field of this object.
     setter set_label(val: &str) as "label";
 }
@@ -339,7 +339,7 @@ js_type! {
 webgpu_dictionary! {
     GpuRenderBundleEncoderDescriptor;
     /// Construct a new `GpuRenderBundleEncoderDescriptor`.
-    new new(color_formats: &[Option<alloc::string::String>] as "colorFormats");
+    new new(color_formats: &[crate::JsOption<crate::JsString>] as "colorFormats");
     /// Change the `depthReadOnly` field of this object.
     setter set_depth_read_only(val: bool) as "depthReadOnly";
     /// Change the `depthStencilFormat` field of this object.
@@ -364,7 +364,9 @@ js_type! {
 webgpu_dictionary! {
     GpuRenderPassDescriptor;
     /// Construct a new `GpuRenderPassDescriptor`.
-    new new(color_attachments: &[Option<GpuRenderPassColorAttachment>] as "colorAttachments");
+    new new(
+        color_attachments: &[crate::JsOption<GpuRenderPassColorAttachment>] as "colorAttachments",
+    );
     /// Change the `depthStencilAttachment` field of this object.
     setter set_depth_stencil_attachment(
         val: &GpuRenderPassDepthStencilAttachment,
@@ -525,7 +527,7 @@ webgpu_dictionary! {
     /// Change the `usage` field of this object.
     setter set_usage(val: u32) as "usage";
     /// Change the `viewFormats` field of this object.
-    setter set_view_formats(val: &[alloc::string::String]) as "viewFormats";
+    setter set_view_formats(val: &[crate::JsString]) as "viewFormats";
 }
 
 js_type! {

@@ -317,7 +317,7 @@ jobs:
           cargo --locked doc --target ${{ matrix.target }} ${{ matrix.extra-flags }} --no-deps --all-features
 
       # WASI has no wasm-bindgen loader, so the only configuration worth building
-      # is the Node-API one. `wgpu-napi-web` is checked on its own as well: it is
+      # is the Node-API one. `napi-rs-webgpu` is checked on its own as well: it is
       # the crate that actually contains the Node-API calls, and nothing else in
       # the workspace compiles it.
       - name: Check `napi-web`
@@ -326,9 +326,21 @@ jobs:
         run: |
           set -e
 
-          cargo --locked clippy --target ${{ matrix.target }} -p wgpu-napi-web -p wgpu-napi-web-macro
+          cargo --locked clippy --target ${{ matrix.target }} -p napi-rs-webgpu
           cargo --locked clippy --target ${{ matrix.target }} -p wgpu --no-default-features --features napi-web,wgsl
-          cargo --locked doc --target ${{ matrix.target }} -p wgpu-napi-web -p wgpu-napi-web-macro --no-deps
+          cargo --locked doc --target ${{ matrix.target }} -p napi-rs-webgpu --no-deps
+
+          # The point of the feature, checked rather than described: a WASI build
+          # resolves none of the crates it replaces.
+          cargo --locked tree --target ${{ matrix.target }} -p wgpu \
+            --no-default-features --features napi-web,wgsl \
+            -e normal --prefix none | awk '{ print $1 }' | sort -u > /tmp/wasi-deps.txt
+          for crate in js-sys web-sys wasm-bindgen wasm-bindgen-futures; do
+            if grep -qx "$crate" /tmp/wasi-deps.txt; then
+              echo "::error::$crate is still in the WASI dependency graph"
+              exit 1
+            fi
+          done
 
           # No `cargo doc` for `wgpu` itself here: a backend-only feature set leaves
           # four doc links in `wgpu` pointing at `wgpu-hal` items that such a build

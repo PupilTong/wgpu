@@ -72,7 +72,9 @@ serde = { workspace = true, default-features = false, features = [
 ], optional = true }
 static_assertions.workspace = true
 
-[target.'cfg(target_family = "wasm")'.dependencies]
+# Not for WASI: wasm-bindgen has no loader there, so `napi-web` binds the same
+# JavaScript objects over Node-API instead and these three are never resolved.
+[target.'cfg(all(target_family = "wasm", not(target_os = "wasi")))'.dependencies]
 js-sys = { workspace = true, optional = true, default-features = false }
 web-sys = { workspace = true, optional = true, default-features = false, features = [
     "ImageBitmap",

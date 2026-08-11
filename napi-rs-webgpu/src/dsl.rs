@@ -48,7 +48,7 @@ macro_rules! js_upcast {
 
 /// Emits everything about a JavaScript type that only involves its parent.
 ///
-/// Invoked through [`js_type!`], which adds the ancestors above the parent.
+/// Invoked through [`crate::js_type!`], which adds the ancestors above the parent.
 #[macro_export]
 macro_rules! js_type_core {
     (
@@ -74,7 +74,7 @@ macro_rules! js_type_core {
                 Self(parent, $($(core::marker::PhantomData::<$generic>,)+)?)
             }
 
-            /// This value as a plain [`JsValue`], which every [`crate::rt`]
+            /// This value as a plain [`crate::JsValue`], which every `napi::rt`
             /// operation takes.
             #[inline]
             fn js(&self) -> &$crate::napi::value::JsValue {
@@ -113,7 +113,7 @@ macro_rules! js_type_core {
 
         /// The unchecked conversion wasm-bindgen also generates for every imported
         /// type: whatever the value is, it is now spelled as this type. The chain of
-        /// these down to [`JsValue`] is what lets a generated type's ancestor
+        /// these down to [`crate::JsValue`] is what lets a generated type's ancestor
         /// conversions be written as `value.into()`.
         impl $(<$($generic $(: $generic_bound)?),+>)? From<$crate::napi::value::JsValue>
             for $name $(<$($generic),+>)?
@@ -195,7 +195,6 @@ macro_rules! js_type_core {
 ///     /// The JavaScript `Uint8Array`.
 ///     Uint8Array: [Object, JsValue],
 ///     instanceof(value) { is_typedarray(value, TypedarrayType::uint8_array) },
-///     resolves_to Self,
 /// }
 /// ```
 ///

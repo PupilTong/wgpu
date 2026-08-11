@@ -3,18 +3,26 @@ use crate::{DownlevelFlags, Origin2d};
 // WebGPU's external-image sources are live JavaScript objects, so this names the
 // crate that binds them: `web-sys` normally, and `napi-rs-webgpu` on WASI, where
 // wasm-bindgen has no working loader.
-#[cfg(all(target_family = "wasm", feature = "web", not(feature = "napi-web")))]
+//
+// `napi-web` only takes effect on WASI — that is the only target `napi-rs-webgpu`
+// is a dependency for — so both conditions name the target as well as the feature,
+// and a `--all-features` build for `wasm32-unknown-unknown` still reads `web-sys`.
+#[cfg(all(target_os = "wasi", feature = "napi-web"))]
+use napi_rs_webgpu::{
+    HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, ImageBitmap, ImageData, Object,
+    OffscreenCanvas, VideoFrame,
+};
+#[cfg(all(
+    target_family = "wasm",
+    feature = "web",
+    not(all(target_os = "wasi", feature = "napi-web"))
+))]
 use {
     js_sys::Object,
     web_sys::{
         HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, ImageBitmap, ImageData,
         OffscreenCanvas, VideoFrame,
     },
-};
-#[cfg(all(target_family = "wasm", feature = "napi-web"))]
-use napi_rs_webgpu::{
-    HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, ImageBitmap, ImageData, Object,
-    OffscreenCanvas, VideoFrame,
 };
 
 /// View of an external texture that can be used to copy to a texture.

@@ -122,7 +122,7 @@ webgpu_dictionary! {
     /// Construct a new `GpuFragmentState`.
     new new(
         module: &GpuShaderModule as "module",
-        targets: &[Option<GpuColorTargetState>] as "targets",
+        targets: &[crate::JsOption<GpuColorTargetState>] as "targets",
     );
     /// Change the `entryPoint` field of this object.
     setter set_entry_point(val: &str) as "entryPoint";
@@ -290,7 +290,7 @@ webgpu_dictionary! {
     /// Construct a new `GpuVertexState`.
     new new(module: &GpuShaderModule as "module");
     /// Change the `buffers` field of this object.
-    setter set_buffers(val: &[Option<GpuVertexBufferLayout>]) as "buffers";
+    setter set_buffers(val: &[crate::JsOption<GpuVertexBufferLayout>]) as "buffers";
     /// Change the `entryPoint` field of this object.
     setter set_entry_point(val: &str) as "entryPoint";
 }

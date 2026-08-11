@@ -23,11 +23,11 @@ webgpu_members! {
     /// The `getPreferredCanvasFormat()` method.
     method get_preferred_canvas_format() -> GpuTextureFormat as "getPreferredCanvasFormat";
     /// The `requestAdapter()` method.
-    method request_adapter() -> crate::Promise<Option<GpuAdapter>> as "requestAdapter";
+    method request_adapter() -> crate::Promise<crate::JsOption<GpuAdapter>> as "requestAdapter";
     /// The `requestAdapter()` method.
     method request_adapter_with_options(
         options: &GpuRequestAdapterOptions,
-    ) -> crate::Promise<Option<GpuAdapter>> as "requestAdapter";
+    ) -> crate::Promise<crate::JsOption<GpuAdapter>> as "requestAdapter";
 }
 
 js_type! {
@@ -89,7 +89,7 @@ webgpu_members! {
     /// The `has()` method.
     method has(value: &str) -> bool as "has";
     /// The `keys()` method.
-    method keys() -> alloc::vec::Vec<alloc::string::String> as "keys";
+    method keys() -> crate::JsIterator<crate::JsString> as "keys";
 }
 
 js_type! {
@@ -186,5 +186,5 @@ webgpu_members! {
     /// The `has()` method.
     method has(value: &str) -> bool as "has";
     /// The `keys()` method.
-    method keys() -> alloc::vec::Vec<alloc::string::String> as "keys";
+    method keys() -> crate::JsIterator<crate::JsString> as "keys";
 }

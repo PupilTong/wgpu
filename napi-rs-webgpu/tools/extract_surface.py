@@ -33,6 +33,12 @@ IMPL_FN = re.compile(
     re.S,
 )
 ENUM_VARIANT = re.compile(r"(?P<name>\w+)\s*=\s*\"(?P<js>[^\"]*)\"")
+# A WebIDL namespace — `GPUMapMode` is the only one WebGPU has — which web-sys
+# lowers to a module of constants rather than to a type.
+NAMESPACE_DECL = re.compile(r"pub mod (?P<name>\w+)\s*\{")
+CONST_DECL = re.compile(
+    r"pub const (?P<name>\w+)\s*:\s*(?P<type>\w+)\s*=\s*(?P<value>\d+)\w*(?:\s+as\s+\w+)?\s*;"
+)
 
 
 def matching_brace(text: str, open_index: int) -> int:
@@ -126,11 +132,21 @@ def main(gen_dir: str, backend_path: str, out_path: str) -> int:
     backend = Path(backend_path).read_text()
     interfaces: dict[str, dict] = {}
     enums: dict[str, dict] = {}
+    namespaces: dict[str, dict] = {}
 
     for path in sorted(gen.glob("gen_*.rs")):
         text = path.read_text()
         # Strip doc comments so the declaration regexes see clean text.
         text = re.sub(r"#\s*\[doc\s*=\s*\"(?:[^\"\\]|\\.)*\"\s*\]", "", text)
+
+        for match in NAMESPACE_DECL.finditer(text):
+            body = text[match.end() : matching_brace(text, match.end() - 1)]
+            constants = [
+                {"name": c.group("name"), "type": c.group("type"), "value": c.group("value")}
+                for c in CONST_DECL.finditer(body)
+            ]
+            if constants:
+                namespaces[match.group("name")] = {"constants": constants}
 
         for match in ENUM_DECL.finditer(text):
             variants = [
@@ -244,15 +260,27 @@ def main(gen_dir: str, backend_path: str, out_path: str) -> int:
         )
     for name, spec in enums.items():
         spec["used"] = bool(re.search(rf"webgpu_sys::{re.escape(name)}\b", backend))
+    for name, spec in namespaces.items():
+        for constant in spec["constants"]:
+            constant["used"] = bool(
+                re.search(
+                    rf"webgpu_sys::{re.escape(name)}::{re.escape(constant['name'])}\b",
+                    backend,
+                )
+            )
+        spec["used"] = any(constant["used"] for constant in spec["constants"])
 
-    spec = {"interfaces": interfaces, "enums": enums}
-    Path(out_path).write_text(json.dumps(spec, indent=1))
+    spec = {"interfaces": interfaces, "enums": enums, "namespaces": namespaces}
+    # Two-space indent and a trailing newline, which is what `prettier` — run
+    # over the repository in CI — formats JSON as.
+    Path(out_path).write_text(json.dumps(spec, indent=2) + "\n")
 
     used_interfaces = {k: v for k, v in interfaces.items() if v["used"]}
     used_members = sum(
         1 for v in interfaces.values() for m in v["members"] if m["used"]
     )
     used_enums = {k: v for k, v in enums.items() if v["used"]}
+    used_namespaces = {k: v for k, v in namespaces.items() if v["used"]}
     print(f"interfaces      : {len(interfaces):4}  ({len(used_interfaces)} reached)")
     print(
         f"members         : {sum(len(v['members']) for v in interfaces.values()):4}"
@@ -262,6 +290,11 @@ def main(gen_dir: str, backend_path: str, out_path: str) -> int:
     print(
         f"enum variants   : {sum(len(v['variants']) for v in used_enums.values()):4}"
         "  (in reached enums)"
+    )
+    print(
+        f"namespaces      : {len(namespaces):4}  ({len(used_namespaces)} reached,"
+        f" {sum(1 for v in namespaces.values() for c in v['constants'] if c['used'])}"
+        " constants)"
     )
     kinds: dict[str, int] = {}
     for v in interfaces.values():

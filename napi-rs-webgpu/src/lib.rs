@@ -23,10 +23,15 @@
 //! # Scope
 //!
 //! The bindings cover what a WebGPU consumer actually calls, derived from
-//! `wgpu`'s backend rather than guessed: 94 interfaces, 437 members and 32 string
-//! enums, out of the 1156 members `web-sys` generates. `tools/extract_surface.py`
-//! recomputes that set from the IDL-generated bindings, so the scope can be
-//! re-derived rather than maintained by hand.
+//! `wgpu`'s backend rather than guessed: 94 interfaces, 437 members, 32 string
+//! enums and one namespace, out of the 1156 members `web-sys` generates.
+//! `tools/extract_surface.py` recomputes that set from the IDL-generated bindings,
+//! so the scope can be re-derived rather than maintained by hand.
+//!
+//! Alongside them are the JavaScript language types WebGPU's IDL names — [`Object`],
+//! [`Promise`], [`JsString`], [`JsOption`], [`JsIterator`], [`ArrayBuffer`] and the
+//! typed arrays — and the DOM types its external-image sources and surface creation
+//! name. Those are this crate's own; nothing here imitates `js-sys` or `web-sys`.
 //!
 //! # Using it
 //!
@@ -67,6 +72,7 @@ extern crate alloc;
 #[macro_use]
 mod dsl;
 
+mod builtins;
 mod dom;
 mod entry;
 mod napi;
@@ -74,10 +80,11 @@ mod support;
 mod typed_array;
 mod webgpu;
 
+pub use builtins::{global, JsIter, JsIterator, JsOption, JsString, Number, Reflect, Undefined};
 pub use dom::*;
 pub use entry::{adopt_js_value, gpu, install_gpu};
 pub use napi::env::{install, is_installed, uninstall};
-pub use napi::value::{JsCast, JsValue};
+pub use napi::value::{JsCast, JsError, JsValue};
 pub use support::{Error, Object, Promise};
 pub use typed_array::{ArrayBuffer, Uint32Array, Uint8Array};
 pub use webgpu::*;

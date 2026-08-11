@@ -70,7 +70,7 @@ webgpu_members! {
         mode: u32,
         offset: f64,
         size: f64,
-    ) -> crate::Promise<()> as "mapAsync";
+    ) -> crate::Promise<crate::Undefined> as "mapAsync";
     /// The `unmap()` method.
     method unmap() as "unmap";
 }

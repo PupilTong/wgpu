@@ -19,6 +19,7 @@ use napi_sys as sys;
 
 use crate::napi::rt;
 use crate::napi::value::JsValue;
+use crate::webgpu::Gpu;
 
 thread_local! {
     /// The `GPU` [`install_gpu`] was given, if it was called on this thread.
@@ -105,20 +106,15 @@ pub unsafe fn install_gpu(gpu: JsValue) {
 /// If nothing was installed by [`install_gpu`] and [`crate::install`] was never
 /// called on this thread: reading a global needs an environment, and a thread
 /// without one has no JavaScript to search.
-//
-// TODO: return `Option<Gpu>` once `crate::webgpu` re-exports the generated `Gpu`
-// — it is declared in `webgpu/generated/adapter.rs` but not yet reachable from
-// `webgpu/mod.rs`. The change is `Gpu::from(value)` at both returns and nothing
-// else: `Gpu` is a transparent newtype over exactly the handle returned here.
 #[must_use]
-pub fn gpu() -> Option<JsValue> {
+pub fn gpu() -> Option<Gpu> {
     if let Some(installed) = GPU.with(|slot| slot.borrow().clone()) {
-        return Some(installed);
+        return Some(Gpu::from(installed));
     }
     let navigator = rt::global(c"navigator").ok()?;
     if navigator.is_undefined() || navigator.is_null() {
         return None;
     }
     let gpu = rt::get(&navigator, c"gpu").ok()?;
-    (!gpu.is_undefined() && !gpu.is_null()).then_some(gpu)
+    (!gpu.is_undefined() && !gpu.is_null()).then(|| Gpu::from(gpu))
 }

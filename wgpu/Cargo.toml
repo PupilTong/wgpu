@@ -257,6 +257,17 @@ smallvec.workspace = true
 # Webassembly #
 ###############
 [target.'cfg(all(target_family = "wasm", not(target_os = "emscripten")))'.dependencies]
+# Needed for only wgpu-core backend. Optional as webgl is optional on WebAssembly.
+wgpu-core = { workspace = true, optional = true }
+wgpu-hal = { workspace = true, optional = true }
+
+smallvec = { workspace = true, optional = true }
+
+# The wasm-bindgen family, which every JavaScript-facing feature is written against
+# except on WASI. There wasm-bindgen has no loader — `wasm-bindgen-cli` emits its JS
+# glue for `wasm32-unknown-unknown` only — so the `napi-web` feature binds the same
+# JavaScript objects over Node-API and these four are not resolved at all.
+[target.'cfg(all(target_family = "wasm", not(target_os = "emscripten"), not(target_os = "wasi")))'.dependencies]
 # Needed for all backends
 js-sys = { workspace = true, optional = true }
 wasm-bindgen = { workspace = true, optional = true }
@@ -264,12 +275,6 @@ web-sys = { workspace = true, optional = true, features = [
     "HtmlCanvasElement",
     "OffscreenCanvas",
 ] }
-
-# Needed for only wgpu-core backend. Optional as webgl is optional on WebAssembly.
-wgpu-core = { workspace = true, optional = true }
-wgpu-hal = { workspace = true, optional = true }
-
-smallvec = { workspace = true, optional = true }
 
 # Needed for the webgpu backend. Optional as webgpu is optional on WebAssembly.
 wasm-bindgen-futures = { workspace = true, optional = true }

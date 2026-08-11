@@ -113,7 +113,7 @@ webgpu_members! {
     /// The `destroy()` method.
     method destroy() as "destroy";
     /// The `popErrorScope()` method.
-    method pop_error_scope() -> crate::Promise<Option<GpuError>> as "popErrorScope";
+    method pop_error_scope() -> crate::Promise<crate::JsOption<GpuError>> as "popErrorScope";
     /// The `pushErrorScope()` method.
     method push_error_scope(filter: GpuErrorFilter) as "pushErrorScope";
 }
@@ -185,7 +185,8 @@ webgpu_members! {
         copy_size: &GpuExtent3dDict,
     ) as "copyExternalImageToTexture" catch;
     /// The `onSubmittedWorkDone()` method.
-    method on_submitted_work_done() -> crate::Promise<()> as "onSubmittedWorkDone";
+    method on_submitted_work_done()
+        -> crate::Promise<crate::Undefined> as "onSubmittedWorkDone";
     /// The `submit()` method.
     method submit(command_buffers: &[GpuCommandBuffer]) as "submit";
     /// The `writeBuffer()` method.

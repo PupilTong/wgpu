@@ -1,9 +1,11 @@
 use crate::{Adapter, Instance, RequestAdapterOptions, Surface};
 
-#[cfg(webgpu)]
-use crate::js::wasm_bindgen_futures;
 #[cfg(doc)]
 use crate::Backends;
+#[cfg(napi_web)]
+use napi_rs_webgpu::futures::JsFuture;
+#[cfg(all(webgpu, not(napi_web)))]
+use wasm_bindgen_futures::JsFuture;
 
 /// Initialize the adapter obeying the `WGPU_ADAPTER_NAME` environment variable.
 #[cfg(wgpu_core)]
@@ -90,7 +92,7 @@ pub async fn is_browser_webgpu_supported() -> bool {
         // ...but in practice, we also have to try to create an adapter, since as of writing
         // Chrome on Linux has the `gpu` property but doesn't support WebGPU.
         let adapter_promise = gpu.request_adapter();
-        wasm_bindgen_futures::JsFuture::from(adapter_promise)
+        JsFuture::from(adapter_promise)
             .await
             .is_ok_and(|adapter| !adapter.is_undefined() && !adapter.is_null())
     }

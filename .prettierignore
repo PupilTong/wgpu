@@ -3,3 +3,6 @@
 deno_webgpu/**/*.js
 naga/tests/in/
 naga/tests/out/
+# Machine-written: `napi-rs-webgpu/tools/extract_surface.py` emits it, and
+# re-running the tool has to leave the file unchanged.
+napi-rs-webgpu/tools/surface.json
