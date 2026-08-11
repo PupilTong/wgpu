@@ -13,8 +13,13 @@ exclude = ["Cargo.lock"]
 # Override the workspace's `rust-version` key. `wgpu` and its dependencies
 # have a less strict MSRV, to allow users more leeway in updating their Rust toolchain.
 #
+# 1.88 rather than `wgpu-core`'s 1.87 because of the Node-API bindings: `napi-sys`
+# and `libloading` both declare 1.88, and Cargo checks `rust-version` across the
+# whole resolved graph — a dependency declared only for WASI still counts on every
+# target, so `webgpu` (a default feature) carries the floor everywhere.
+#
 # See the repo README for more information on MSRV policy.
-rust-version = "1.87.0"
+rust-version = "1.88.0"
 
 [package.metadata.docs.rs]
 all-features = true

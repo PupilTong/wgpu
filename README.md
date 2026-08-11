@@ -97,7 +97,7 @@ For an overview of all the components in the gfx-rs ecosystem, see [the big pict
 
 ## MSRV policy
 
-TL;DR: If you're using `wgpu`, our MSRV is **1.87**. If you're running our tests or examples, our MSRV is **1.93**.
+TL;DR: If you're using `wgpu`, our MSRV is **1.88**. If you're running our tests or examples, our MSRV is **1.93**.
 
 We will avoid bumping the MSRV of `wgpu` without good reason, and such a change is considered breaking.
 
@@ -106,7 +106,10 @@ We will avoid bumping the MSRV of `wgpu` without good reason, and such a change 
 
 Due to complex dependants, we have three MSRV policies:
 
-- `wgpu`'s MSRV is **1.87**
+- `wgpu`'s MSRV is **1.88**, raised from `wgpu-core`'s 1.87 by the Node-API
+  bindings the `webgpu` backend uses on WASI (`napi-sys` declares 1.88, and Cargo
+  checks `rust-version` across the whole graph, so a WASI-only dependency counts
+  on every target)
 - `wgpu-core` (and hence `wgpu-hal`, `naga`, `naga-types` and `wgpu-types`)'s MSRV is **1.87**.
 - The rest of the workspace has an MSRV of **1.93**.
 

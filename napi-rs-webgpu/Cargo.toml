@@ -7,7 +7,10 @@ homepage.workspace = true
 repository.workspace = true
 keywords.workspace = true
 license.workspace = true
-rust-version.workspace = true
+# Not the workspace's 1.93: this crate is a dependency of `wgpu`, whose MSRV is
+# the looser one, and Cargo checks `rust-version` across the whole graph. 1.88 is
+# what `napi-sys` requires, so it is the lowest this can honestly be.
+rust-version = "1.88"
 
 [lib]
 
