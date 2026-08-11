@@ -14,6 +14,32 @@
 //! Keeping primitives on the Rust side is what makes `JsValue::from_str("label")`
 //! as cheap as it looks, and it is why property keys — created by the thousand
 //! per frame — never touch the JS heap until the call that uses them.
+//!
+//! # Why not napi-rs' own value types
+//!
+//! napi-rs has them, and they answer a different question. `napi::Unknown<'env>`
+//! and `napi::Object<'env>` are a `napi_value` plus a `PhantomData<&'env ()>`:
+//! they borrow the handle scope, so they say exactly what a value passed *into* a
+//! `#[napi]` function is, and nothing they describe can be kept afterwards. What
+//! `wgpu` keeps is the opposite — a `WebBuffer` holds its `GpuBuffer` for as long
+//! as the buffer exists, across arbitrarily many calls and scopes.
+//!
+//! The escaping form is `napi::ObjectRef`, which owns a `napi_ref`, and three of
+//! its properties rule it out here: it is not `Clone`, while every `wgpu` handle
+//! is; it must be released by an explicit `unref(&Env)`, and its `Drop` only
+//! prints "ObjectRef is not unref, it considered as a memory leak" — a Rust type
+//! whose destructor cannot free it is not one that can sit inside a `Drop` impl
+//! chain; and reading it back needs an `&Env` at every use, which WebGPU's
+//! signatures have nowhere to carry.
+//!
+//! So this type takes the environment from a thread-local ([`crate::napi::env`]),
+//! counts the reference with an [`Rc`] whose `Drop` calls `napi_delete_reference`,
+//! and is `'static` and `Clone` as a result. That also leaves it free to be
+//! `#[repr(transparent)]`, which is what lets every generated handle be a
+//! transparent newtype over it and `JsCast::unchecked_from_js_ref` reinterpret a
+//! `&JsValue` as a `&GpuBuffer` — the same move `web-sys` makes over
+//! `wasm_bindgen::JsValue`, and the reason the `wgpu` backend compiles unchanged
+//! against either.
 
 use alloc::rc::Rc;
 use alloc::string::String;

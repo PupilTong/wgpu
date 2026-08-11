@@ -14,11 +14,19 @@ rust-version.workspace = true
 [dependencies]
 log.workspace = true
 
-# Only the raw Node-API ABI is needed, and it is the one part of napi-rs that is
-# free of build-script requirements: `napi-build`'s WASI setup insists on
-# `EMNAPI_LINK_DIR`, which belongs to the final addon that links emnapi, not to a
-# library in the middle. `napi5` is the floor for `napi_add_finalizer`, which is
-# how a Rust closure handed to JavaScript is freed.
+# The raw Node-API ABI, and not napi-rs' high-level `napi` crate, whose value
+# types cannot express what `wgpu` stores. `napi::Unknown<'env>` and
+# `napi::Object<'env>` borrow the handle scope they were made in, so neither can
+# live in a `WebBuffer` that outlives the call that produced it; the escaping form,
+# `napi::ObjectRef`, is not `Clone` (every `wgpu` handle is), must be released by
+# an explicit `unref(&Env)` or its `Drop` prints a leak warning, and hands back an
+# `Object<'env>` only when given an `Env` — which WebGPU's signatures have nowhere
+# to carry. `src/napi/value.rs` builds the `'static`, `Clone`, env-free handle
+# those constraints call for. The dependency is three crates rather than
+# twenty-three as a consequence, not as the goal.
+#
+# `napi5` is the floor for `napi_add_finalizer`, which is how a Rust closure handed
+# to JavaScript is freed.
 #
 # On wasm, napi-sys declares the `napi_*` symbols as plain wasm imports, which is
 # what emnapi resolves. Everywhere else `dyn-symbols` is added so this crate still
