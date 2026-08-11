@@ -30,10 +30,19 @@ const WASM = fileURLToPath(
 Object.assign(globalThis, globals);
 const gpu = create([]);
 
-// `--import-memory` and `--max-memory=4294967296` come from `napi-build`'s WASI
-// setup, so the host supplies the memory. It must be shared: the module is built
-// for `wasm32-wasip1-threads`. 4000 pages is 256 MiB, above the module's declared
-// minimum (which `-zstack-size=64000000` pushes to 977 pages).
+// The host supplies the memory, because `napi-build`'s WASI setup links with
+// `--import-memory`. Two of the three arguments are load-bearing, and each was
+// checked by getting it wrong on purpose:
+//
+//  * `initial` must be at least the module's declared minimum, which
+//    `-zstack-size=64000000` puts at 978 pages. 500 gives "memory import has 500
+//    pages which is smaller than the declared initial of 978".
+//  * `shared` must be true, because the module is built for
+//    `wasm32-wasip1-threads`. False gives "mismatch in shared state of memory".
+//  * `maximum` is not load-bearing. `--max-memory=4294967296` declares 65536
+//    pages, which is also wasm32's ceiling, so no value that can be constructed
+//    exceeds it — 16384 and 65536 both run.
+const DECLARED_MINIMUM_PAGES = 978;
 const memory = new WebAssembly.Memory({
   initial: 4000,
   maximum: 65536,
@@ -42,33 +51,54 @@ const memory = new WebAssembly.Memory({
 
 const wasi = new WASI({ print: console.log, printErr: console.error });
 
-const { napiModule } = await instantiateNapiModule(await readFile(WASM), {
-  context: getDefaultContext(),
-  wasi,
-  overwriteImports(imports) {
-    imports.env = {
-      ...imports.env,
-      ...imports.napi,
-      ...imports.emnapi,
-      memory,
-    };
-    return imports;
-  },
-  // A wasm module has no static constructors, so the `#[napi]` registrations
-  // that a native addon would run from `.init_array` are exported instead and
-  // have to be called before the exports object exists.
-  beforeInit({ instance }) {
-    for (const name of Object.keys(instance.exports)) {
-      if (name.startsWith("__napi_register__")) instance.exports[name]();
+const { napiModule } = await instantiate();
+
+async function instantiate() {
+  const options = {
+    context: getDefaultContext(),
+    wasi,
+    overwriteImports(imports) {
+      imports.env = {
+        ...imports.env,
+        ...imports.napi,
+        ...imports.emnapi,
+        memory,
+      };
+      return imports;
+    },
+    // A wasm module has no static constructors, so the `#[napi]` registrations
+    // that a native addon would run from `.init_array` are exported instead and
+    // have to be called before the exports object exists.
+    beforeInit({ instance }) {
+      for (const name of Object.keys(instance.exports)) {
+        if (name.startsWith("__napi_register__")) instance.exports[name]();
+      }
+    },
+    // Only reached if something inside the module starts a thread. Nothing here
+    // does, but emnapi's threaded runtime expects to be able to.
+    onCreateWorker: () =>
+      new Worker(new URL("./worker.mjs", import.meta.url), {
+        env: process.env,
+      }),
+  };
+
+  try {
+    return await instantiateNapiModule(await readFile(WASM), options);
+  } catch (error) {
+    // The memory above is the only thing here that has to agree with a link
+    // line this script does not own, so say where to look rather than leaving a
+    // bare `LinkError` about page counts.
+    if (String(error).includes("memory")) {
+      throw new Error(
+        `${error}\n\nThe memory this script creates has to satisfy what ` +
+          `napi-build linked the module with: at least its declared minimum of ` +
+          `${DECLARED_MINIMUM_PAGES} pages (set by -zstack-size), and shared. ` +
+          `If napi-build's link arguments changed, that is what to update.`,
+      );
     }
-  },
-  // Only reached if something inside the module starts a thread. Nothing here
-  // does, but emnapi's threaded runtime expects to be able to.
-  onCreateWorker: () =>
-    new Worker(new URL("./worker.mjs", import.meta.url), {
-      env: process.env,
-    }),
-});
+    throw error;
+  }
+}
 
 const addon = napiModule.exports;
 const [width, height, ...colours] = addon.expected();
