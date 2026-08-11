@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUUncapturedErrorEventInit)]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUUncapturedErrorEventInit)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuUncapturedErrorEventInit` dictionary."]
     #[doc = ""]
@@ -119,7 +118,7 @@ impl GpuUncapturedErrorEventInit {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(error: &GpuError) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_error(error);
         ret
     }

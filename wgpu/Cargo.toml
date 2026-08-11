@@ -96,7 +96,7 @@ webgl = ["web", "wgpu-core/webgl", "dep:wgpu-hal", "dep:smallvec"]
 ## addon (`@napi-rs/wasm-runtime` + emnapi) has available in the browser.
 ##
 ## Requires `webgpu`, and has no effect on any target other than WASI.
-napi-web = ["webgpu", "std", "dep:wgpu-napi-web", "wgpu-types/napi-web"]
+napi-web = ["webgpu", "std", "dep:napi-rs-webgpu", "wgpu-types/napi-web"]
 
 #! ### Backend features
 
@@ -280,7 +280,7 @@ wasm-bindgen-futures = { workspace = true, optional = true }
 [target.'cfg(all(target_family = "wasm", target_os = "wasi"))'.dependencies]
 # The Node-API stand-in for the wasm-bindgen family, selected by the `napi-web`
 # feature. Optional, and only ever resolved for WASI targets.
-wgpu-napi-web = { workspace = true, optional = true }
+napi-rs-webgpu = { workspace = true, optional = true }
 
 ##############
 # Emscripten #

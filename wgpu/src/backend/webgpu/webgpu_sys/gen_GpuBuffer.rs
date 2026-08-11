@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUBuffer , typescript_type = "GPUBuffer")]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUBuffer , typescript_type = "GPUBuffer")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuBuffer` class."]
     #[doc = ""]
@@ -114,7 +113,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_mapped_range(this: &GpuBuffer) -> Result<js_sys::ArrayBuffer, JsValue>;
+    pub fn get_mapped_range(this: &GpuBuffer) -> Result<::js_sys::ArrayBuffer, JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUBuffer" , js_name = getMappedRange)]
     #[doc = "The `getMappedRange()` method."]
@@ -128,7 +127,7 @@ extern "C" {
     pub fn get_mapped_range_with_u32(
         this: &GpuBuffer,
         offset: u32,
-    ) -> Result<js_sys::ArrayBuffer, JsValue>;
+    ) -> Result<::js_sys::ArrayBuffer, JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUBuffer" , js_name = getMappedRange)]
     #[doc = "The `getMappedRange()` method."]
@@ -142,7 +141,7 @@ extern "C" {
     pub fn get_mapped_range_with_f64(
         this: &GpuBuffer,
         offset: f64,
-    ) -> Result<js_sys::ArrayBuffer, JsValue>;
+    ) -> Result<::js_sys::ArrayBuffer, JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUBuffer" , js_name = getMappedRange)]
     #[doc = "The `getMappedRange()` method."]
@@ -157,7 +156,7 @@ extern "C" {
         this: &GpuBuffer,
         offset: u32,
         size: u32,
-    ) -> Result<js_sys::ArrayBuffer, JsValue>;
+    ) -> Result<::js_sys::ArrayBuffer, JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUBuffer" , js_name = getMappedRange)]
     #[doc = "The `getMappedRange()` method."]
@@ -172,7 +171,7 @@ extern "C" {
         this: &GpuBuffer,
         offset: f64,
         size: u32,
-    ) -> Result<js_sys::ArrayBuffer, JsValue>;
+    ) -> Result<::js_sys::ArrayBuffer, JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUBuffer" , js_name = getMappedRange)]
     #[doc = "The `getMappedRange()` method."]
@@ -187,7 +186,7 @@ extern "C" {
         this: &GpuBuffer,
         offset: u32,
         size: f64,
-    ) -> Result<js_sys::ArrayBuffer, JsValue>;
+    ) -> Result<::js_sys::ArrayBuffer, JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUBuffer" , js_name = getMappedRange)]
     #[doc = "The `getMappedRange()` method."]
@@ -202,7 +201,7 @@ extern "C" {
         this: &GpuBuffer,
         offset: f64,
         size: f64,
-    ) -> Result<js_sys::ArrayBuffer, JsValue>;
+    ) -> Result<::js_sys::ArrayBuffer, JsValue>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -213,7 +212,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn map_async(this: &GpuBuffer, mode: u32) -> js_sys::Promise<js_sys::Undefined>;
+    pub fn map_async(this: &GpuBuffer, mode: u32) -> ::js_sys::Promise<::js_sys::Undefined>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -228,7 +227,7 @@ extern "C" {
         this: &GpuBuffer,
         mode: u32,
         offset: u32,
-    ) -> js_sys::Promise<js_sys::Undefined>;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -243,7 +242,7 @@ extern "C" {
         this: &GpuBuffer,
         mode: u32,
         offset: f64,
-    ) -> js_sys::Promise<js_sys::Undefined>;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -259,7 +258,7 @@ extern "C" {
         mode: u32,
         offset: u32,
         size: u32,
-    ) -> js_sys::Promise<js_sys::Undefined>;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -275,7 +274,7 @@ extern "C" {
         mode: u32,
         offset: f64,
         size: u32,
-    ) -> js_sys::Promise<js_sys::Undefined>;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -291,7 +290,7 @@ extern "C" {
         mode: u32,
         offset: u32,
         size: f64,
-    ) -> js_sys::Promise<js_sys::Undefined>;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = mapAsync)]
     #[doc = "The `mapAsync()` method."]
@@ -307,7 +306,7 @@ extern "C" {
         mode: u32,
         offset: f64,
         size: f64,
-    ) -> js_sys::Promise<js_sys::Undefined>;
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUBuffer" , js_name = unmap)]
     #[doc = "The `unmap()` method."]

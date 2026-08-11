@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUVertexBufferLayout)]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUVertexBufferLayout)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuVertexBufferLayout` dictionary."]
     #[doc = ""]
@@ -71,7 +70,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "attributes")]
-    pub fn get_attributes(this: &GpuVertexBufferLayout) -> js_sys::Array<GpuVertexAttribute>;
+    pub fn get_attributes(this: &GpuVertexBufferLayout) -> ::js_sys::Array<GpuVertexAttribute>;
 
     #[doc = "Change the `attributes` field of this object."]
     #[doc = ""]
@@ -110,7 +109,7 @@ impl GpuVertexBufferLayout {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(array_stride: u32, attributes: &[GpuVertexAttribute]) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_array_stride(array_stride);
         ret.set_attributes(attributes);
         ret
@@ -124,7 +123,7 @@ impl GpuVertexBufferLayout {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_f64(array_stride: f64, attributes: &[GpuVertexAttribute]) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_array_stride_f64(array_stride);
         ret.set_attributes(attributes);
         ret

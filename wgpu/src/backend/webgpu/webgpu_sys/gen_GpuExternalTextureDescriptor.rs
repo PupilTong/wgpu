@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUExternalTextureDescriptor)]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUExternalTextureDescriptor)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuExternalTextureDescriptor` dictionary."]
     #[doc = ""]
@@ -62,7 +61,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "source")]
-    pub fn get_source(this: &GpuExternalTextureDescriptor) -> js_sys::Object;
+    pub fn get_source(this: &GpuExternalTextureDescriptor) -> ::js_sys::Object;
 
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
@@ -92,7 +91,7 @@ impl GpuExternalTextureDescriptor {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(source: &HtmlVideoElement) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_source(source);
         ret
     }
@@ -105,7 +104,7 @@ impl GpuExternalTextureDescriptor {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new_with_video_frame(source: &VideoFrame) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_source_video_frame(source);
         ret
     }

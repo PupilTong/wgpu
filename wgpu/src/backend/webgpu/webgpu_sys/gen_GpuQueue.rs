@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUQueue , typescript_type = "GPUQueue")]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUQueue , typescript_type = "GPUQueue")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuQueue` class."]
     #[doc = ""]
@@ -74,7 +73,7 @@ extern "C" {
         this: &GpuQueue,
         source: &GpuCopyExternalImageSourceInfo,
         destination: &GpuCopyExternalImageDestInfo,
-        copy_size: &[js_sys::Number],
+        copy_size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = copyExternalImageToTexture)]
@@ -102,7 +101,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn on_submitted_work_done(this: &GpuQueue) -> js_sys::Promise<js_sys::Undefined>;
+    pub fn on_submitted_work_done(this: &GpuQueue) -> ::js_sys::Promise<::js_sys::Undefined>;
 
     # [wasm_bindgen (method , structural , js_class = "GPUQueue" , js_name = submit)]
     #[doc = "The `submit()` method."]
@@ -128,7 +127,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = writeBuffer)]
@@ -144,7 +143,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = writeBuffer)]
@@ -192,7 +191,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = writeBuffer)]
@@ -208,7 +207,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = writeBuffer)]
@@ -224,7 +223,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: u32,
     ) -> Result<(), JsValue>;
 
@@ -241,7 +240,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: u32,
     ) -> Result<(), JsValue>;
 
@@ -292,7 +291,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: u32,
     ) -> Result<(), JsValue>;
 
@@ -309,7 +308,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: u32,
     ) -> Result<(), JsValue>;
 
@@ -326,7 +325,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: f64,
     ) -> Result<(), JsValue>;
 
@@ -343,7 +342,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: f64,
     ) -> Result<(), JsValue>;
 
@@ -394,7 +393,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: f64,
     ) -> Result<(), JsValue>;
 
@@ -411,7 +410,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: f64,
     ) -> Result<(), JsValue>;
 
@@ -428,7 +427,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: u32,
         size: u32,
     ) -> Result<(), JsValue>;
@@ -446,7 +445,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: u32,
         size: u32,
     ) -> Result<(), JsValue>;
@@ -500,7 +499,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: u32,
         size: u32,
     ) -> Result<(), JsValue>;
@@ -518,7 +517,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: u32,
         size: u32,
     ) -> Result<(), JsValue>;
@@ -536,7 +535,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: f64,
         size: u32,
     ) -> Result<(), JsValue>;
@@ -554,7 +553,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: f64,
         size: u32,
     ) -> Result<(), JsValue>;
@@ -608,7 +607,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: f64,
         size: u32,
     ) -> Result<(), JsValue>;
@@ -626,7 +625,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: f64,
         size: u32,
     ) -> Result<(), JsValue>;
@@ -644,7 +643,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: u32,
         size: f64,
     ) -> Result<(), JsValue>;
@@ -662,7 +661,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: u32,
         size: f64,
     ) -> Result<(), JsValue>;
@@ -716,7 +715,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: u32,
         size: f64,
     ) -> Result<(), JsValue>;
@@ -734,7 +733,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: u32,
         size: f64,
     ) -> Result<(), JsValue>;
@@ -752,7 +751,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: f64,
         size: f64,
     ) -> Result<(), JsValue>;
@@ -770,7 +769,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_offset: f64,
         size: f64,
     ) -> Result<(), JsValue>;
@@ -824,7 +823,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: u32,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: f64,
         size: f64,
     ) -> Result<(), JsValue>;
@@ -842,7 +841,7 @@ extern "C" {
         this: &GpuQueue,
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_offset: f64,
         size: f64,
     ) -> Result<(), JsValue>;
@@ -859,9 +858,9 @@ extern "C" {
     pub fn write_texture_with_buffer_source_and_u32_sequence(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_layout: &GpuTexelCopyBufferLayout,
-        size: &[js_sys::Number],
+        size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = writeTexture)]
@@ -878,7 +877,7 @@ extern "C" {
         destination: &GpuTexelCopyTextureInfo,
         data: &[u8],
         data_layout: &GpuTexelCopyBufferLayout,
-        size: &[js_sys::Number],
+        size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = writeTexture)]
@@ -893,9 +892,9 @@ extern "C" {
     pub fn write_texture_with_u8_array_and_u32_sequence(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_layout: &GpuTexelCopyBufferLayout,
-        size: &[js_sys::Number],
+        size: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUQueue" , js_name = writeTexture)]
@@ -910,7 +909,7 @@ extern "C" {
     pub fn write_texture_with_buffer_source_and_gpu_extent_3d_dict(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
-        data: &js_sys::Object,
+        data: &::js_sys::Object,
         data_layout: &GpuTexelCopyBufferLayout,
         size: &GpuExtent3dDict,
     ) -> Result<(), JsValue>;
@@ -944,7 +943,7 @@ extern "C" {
     pub fn write_texture_with_u8_array_and_gpu_extent_3d_dict(
         this: &GpuQueue,
         destination: &GpuTexelCopyTextureInfo,
-        data: &js_sys::Uint8Array,
+        data: &::js_sys::Uint8Array,
         data_layout: &GpuTexelCopyBufferLayout,
         size: &GpuExtent3dDict,
     ) -> Result<(), JsValue>;

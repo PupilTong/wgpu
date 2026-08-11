@@ -2,8 +2,17 @@
 
 mod defined_non_null_js_value;
 mod ext_bindings;
+
+// `webgpu_sys` is web-sys' generated WebGPU bindings, vendored verbatim, and they
+// only work where wasm-bindgen's JS glue does. On WASI the same names come from
+// `napi-rs-webgpu`, which binds WebGPU over Node-API; the generated files are not
+// compiled there at all, so they stay exactly as `cargo xtask vendor-web-sys`
+// wrote them.
+#[cfg(not(napi_web))]
 #[allow(clippy::allow_attributes)]
 pub(crate) mod webgpu_sys;
+#[cfg(napi_web)]
+pub(crate) use napi_rs_webgpu as webgpu_sys;
 
 use alloc::{
     boxed::Box,

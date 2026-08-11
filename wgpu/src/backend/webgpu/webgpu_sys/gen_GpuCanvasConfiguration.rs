@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUCanvasConfiguration)]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUCanvasConfiguration)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuCanvasConfiguration` dictionary."]
     #[doc = ""]
@@ -136,7 +135,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "viewFormats")]
     pub fn get_view_formats(
         this: &GpuCanvasConfiguration,
-    ) -> Option<js_sys::Array<js_sys::JsString>>;
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
 
     #[doc = "Change the `viewFormats` field of this object."]
     #[doc = ""]
@@ -145,7 +144,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "viewFormats")]
-    pub fn set_view_formats(this: &GpuCanvasConfiguration, val: &[js_sys::JsString]);
+    pub fn set_view_formats(this: &GpuCanvasConfiguration, val: &[::js_sys::JsString]);
 }
 
 impl GpuCanvasConfiguration {
@@ -157,7 +156,7 @@ impl GpuCanvasConfiguration {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(device: &GpuDevice, format: GpuTextureFormat) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_device(device);
         ret.set_format(format);
         ret
@@ -194,7 +193,7 @@ impl GpuCanvasConfiguration {
     }
 
     #[deprecated = "Use `set_view_formats()` instead."]
-    pub fn view_formats(&mut self, val: &[js_sys::JsString]) -> &mut Self {
+    pub fn view_formats(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_view_formats(val);
         self
     }

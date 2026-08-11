@@ -2503,6 +2503,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a846cbc04412cf509efcd8f3694b114fc700a035fb5a37f21517f9fb019f1ebc"
 
 [[package]]
+name = "napi-rs-webgpu"
+version = "30.0.0"
+dependencies = [
+ "log",
+ "napi-sys",
+]
+
+[[package]]
 name = "napi-sys"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4750,6 +4758,7 @@ dependencies = [
  "js-sys",
  "log",
  "naga",
+ "napi-rs-webgpu",
  "parking_lot",
  "portable-atomic",
  "profiling",
@@ -4761,7 +4770,6 @@ dependencies = [
  "web-sys",
  "wgpu-core",
  "wgpu-hal",
- "wgpu-napi-web",
  "wgpu-types",
 ]
 
@@ -5040,24 +5048,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wgpu-napi-web"
-version = "30.0.0"
-dependencies = [
- "log",
- "napi-sys",
- "wgpu-napi-web-macro",
-]
-
-[[package]]
-name = "wgpu-napi-web-macro"
-version = "30.0.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "wgpu-test"
 version = "30.0.0"
 dependencies = [
@@ -5115,12 +5105,12 @@ dependencies = [
  "log",
  "macro_rules_attribute",
  "naga-types",
+ "napi-rs-webgpu",
  "raw-window-handle",
  "serde",
  "serde_json",
  "static_assertions",
  "web-sys",
- "wgpu-napi-web",
 ]
 
 [[package]]

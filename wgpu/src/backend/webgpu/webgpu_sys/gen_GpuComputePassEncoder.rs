@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUComputePassEncoder , typescript_type = "GPUComputePassEncoder")]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUComputePassEncoder , typescript_type = "GPUComputePassEncoder")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuComputePassEncoder` class."]
     #[doc = ""]
@@ -183,7 +182,7 @@ extern "C" {
         this: &GpuComputePassEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets: &[js_sys::Number],
+        dynamic_offsets: &[::js_sys::Number],
     );
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPUComputePassEncoder" , js_name = setBindGroup)]
@@ -217,7 +216,7 @@ extern "C" {
         this: &GpuComputePassEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets_data: &js_sys::Uint32Array,
+        dynamic_offsets_data: &::js_sys::Uint32Array,
         dynamic_offsets_data_start: u32,
         dynamic_offsets_data_length: u32,
     ) -> Result<(), JsValue>;
@@ -253,7 +252,7 @@ extern "C" {
         this: &GpuComputePassEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets_data: &js_sys::Uint32Array,
+        dynamic_offsets_data: &::js_sys::Uint32Array,
         dynamic_offsets_data_start: f64,
         dynamic_offsets_data_length: u32,
     ) -> Result<(), JsValue>;

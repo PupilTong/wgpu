@@ -54,7 +54,7 @@ trace = ["std", "serde/std"]
 web = ["dep:js-sys", "dep:web-sys"]
 # Reach the same JS objects through Node-API instead of wasm-bindgen, for WASI
 # targets. See `wgpu`'s feature of the same name and `src/js.rs`.
-napi-web = ["web", "std", "dep:wgpu-napi-web"]
+napi-web = ["web", "std", "dep:napi-rs-webgpu"]
 exhaust = ["dep:exhaust"]
 
 [dependencies]
@@ -85,7 +85,7 @@ web-sys = { workspace = true, optional = true, default-features = false, feature
 ] }
 
 [target.'cfg(all(target_family = "wasm", target_os = "wasi"))'.dependencies]
-wgpu-napi-web = { workspace = true, optional = true }
+napi-rs-webgpu = { workspace = true, optional = true }
 
 [dev-dependencies]
 exhaust.workspace = true

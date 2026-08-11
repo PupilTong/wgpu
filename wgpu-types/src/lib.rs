@@ -38,8 +38,6 @@ mod env;
 pub mod error;
 mod features;
 pub mod instance;
-#[cfg(all(target_family = "wasm", feature = "web"))]
-mod js;
 mod limits;
 mod macros;
 pub mod math;

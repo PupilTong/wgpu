@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPURenderPassColorAttachment)]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPURenderPassColorAttachment)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuRenderPassColorAttachment` dictionary."]
     #[doc = ""]
@@ -44,7 +43,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "clearValue")]
-    pub fn get_clear_value(this: &GpuRenderPassColorAttachment) -> wasm_bindgen::JsValue;
+    pub fn get_clear_value(this: &GpuRenderPassColorAttachment) -> ::wasm_bindgen::JsValue;
 
     #[doc = "Change the `clearValue` field of this object."]
     #[doc = ""]
@@ -53,7 +52,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "clearValue")]
-    pub fn set_clear_value(this: &GpuRenderPassColorAttachment, val: &[js_sys::Number]);
+    pub fn set_clear_value(this: &GpuRenderPassColorAttachment, val: &[::js_sys::Number]);
 
     #[doc = "Change the `clearValue` field of this object."]
     #[doc = ""]
@@ -107,7 +106,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "resolveTarget")]
-    pub fn get_resolve_target(this: &GpuRenderPassColorAttachment) -> Option<js_sys::Object>;
+    pub fn get_resolve_target(this: &GpuRenderPassColorAttachment) -> Option<::js_sys::Object>;
 
     #[doc = "Change the `resolveTarget` field of this object."]
     #[doc = ""]
@@ -155,7 +154,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "view")]
-    pub fn get_view(this: &GpuRenderPassColorAttachment) -> js_sys::Object;
+    pub fn get_view(this: &GpuRenderPassColorAttachment) -> ::js_sys::Object;
 
     #[doc = "Change the `view` field of this object."]
     #[doc = ""]
@@ -185,7 +184,7 @@ impl GpuRenderPassColorAttachment {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(load_op: GpuLoadOp, store_op: GpuStoreOp, view: &GpuTexture) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_load_op(load_op);
         ret.set_store_op(store_op);
         ret.set_view(view);
@@ -204,7 +203,7 @@ impl GpuRenderPassColorAttachment {
         view: &GpuTextureView,
     ) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_load_op(load_op);
         ret.set_store_op(store_op);
         ret.set_view_gpu_texture_view(view);
@@ -212,7 +211,7 @@ impl GpuRenderPassColorAttachment {
     }
 
     #[deprecated = "Use `set_clear_value()` instead."]
-    pub fn clear_value(&mut self, val: &[js_sys::Number]) -> &mut Self {
+    pub fn clear_value(&mut self, val: &[::js_sys::Number]) -> &mut Self {
         self.set_clear_value(val);
         self
     }

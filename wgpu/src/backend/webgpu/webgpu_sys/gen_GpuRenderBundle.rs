@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPURenderBundle , typescript_type = "GPURenderBundle")]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPURenderBundle , typescript_type = "GPURenderBundle")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuRenderBundle` class."]
     #[doc = ""]

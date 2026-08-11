@@ -1,8 +1,21 @@
 #[allow(unused_imports, reason = "conditionally used, including in docs")]
 use crate::{DownlevelFlags, Origin2d};
-// The JS interop layer is named once per crate; see `crate::js`.
-#[cfg(all(target_family = "wasm", feature = "web"))]
-use crate::js::{js_sys, web_sys};
+// WebGPU's external-image sources are live JavaScript objects, so this names the
+// crate that binds them: `web-sys` normally, and `napi-rs-webgpu` on WASI, where
+// wasm-bindgen has no working loader.
+#[cfg(all(target_family = "wasm", feature = "web", not(feature = "napi-web")))]
+use {
+    js_sys::Object,
+    web_sys::{
+        HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, ImageBitmap, ImageData,
+        OffscreenCanvas, VideoFrame,
+    },
+};
+#[cfg(all(target_family = "wasm", feature = "napi-web"))]
+use napi_rs_webgpu::{
+    HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, ImageBitmap, ImageData, Object,
+    OffscreenCanvas, VideoFrame,
+};
 
 /// View of an external texture that can be used to copy to a texture.
 ///
@@ -35,21 +48,21 @@ pub struct CopyExternalImageSourceInfo {
 #[derive(Clone, Debug)]
 pub enum ExternalImageSource {
     /// Copy from a previously-decoded image bitmap.
-    ImageBitmap(web_sys::ImageBitmap),
+    ImageBitmap(ImageBitmap),
     /// Copy from an image element.
-    HTMLImageElement(web_sys::HtmlImageElement),
+    HTMLImageElement(HtmlImageElement),
     /// Copy from a current frame of a video element.
-    HTMLVideoElement(web_sys::HtmlVideoElement),
+    HTMLVideoElement(HtmlVideoElement),
     /// Copy from an image.
-    ImageData(web_sys::ImageData),
+    ImageData(ImageData),
     /// Copy from a on-screen canvas.
-    HTMLCanvasElement(web_sys::HtmlCanvasElement),
+    HTMLCanvasElement(HtmlCanvasElement),
     /// Copy from a off-screen canvas.
     ///
     /// Requires [`DownlevelFlags::UNRESTRICTED_EXTERNAL_TEXTURE_COPIES`]
-    OffscreenCanvas(web_sys::OffscreenCanvas),
+    OffscreenCanvas(OffscreenCanvas),
     /// Copy from a video frame.
-    VideoFrame(web_sys::VideoFrame),
+    VideoFrame(VideoFrame),
 }
 
 #[cfg(all(target_family = "wasm", feature = "web"))]
@@ -83,7 +96,7 @@ impl ExternalImageSource {
 
 #[cfg(all(target_family = "wasm", feature = "web"))]
 impl core::ops::Deref for ExternalImageSource {
-    type Target = js_sys::Object;
+    type Target = Object;
 
     fn deref(&self) -> &Self::Target {
         match self {

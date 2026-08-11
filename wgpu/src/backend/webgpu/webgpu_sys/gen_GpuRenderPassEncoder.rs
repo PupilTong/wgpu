@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPURenderPassEncoder , typescript_type = "GPURenderPassEncoder")]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPURenderPassEncoder , typescript_type = "GPURenderPassEncoder")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuRenderPassEncoder` class."]
     #[doc = ""]
@@ -116,7 +115,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_blend_constant_with_f64_sequence(
         this: &GpuRenderPassEncoder,
-        color: &[js_sys::Number],
+        color: &[::js_sys::Number],
     ) -> Result<(), JsValue>;
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPURenderPassEncoder" , js_name = setBlendConstant)]
@@ -202,7 +201,7 @@ extern "C" {
         this: &GpuRenderPassEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets: &[js_sys::Number],
+        dynamic_offsets: &[::js_sys::Number],
     );
 
     # [wasm_bindgen (catch , method , structural , js_class = "GPURenderPassEncoder" , js_name = setBindGroup)]
@@ -236,7 +235,7 @@ extern "C" {
         this: &GpuRenderPassEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets_data: &js_sys::Uint32Array,
+        dynamic_offsets_data: &::js_sys::Uint32Array,
         dynamic_offsets_data_start: u32,
         dynamic_offsets_data_length: u32,
     ) -> Result<(), JsValue>;
@@ -272,7 +271,7 @@ extern "C" {
         this: &GpuRenderPassEncoder,
         index: u32,
         bind_group: Option<&GpuBindGroup>,
-        dynamic_offsets_data: &js_sys::Uint32Array,
+        dynamic_offsets_data: &::js_sys::Uint32Array,
         dynamic_offsets_data_start: f64,
         dynamic_offsets_data_length: u32,
     ) -> Result<(), JsValue>;

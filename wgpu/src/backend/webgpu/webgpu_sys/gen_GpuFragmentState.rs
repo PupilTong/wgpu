@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUFragmentState)]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUFragmentState)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuFragmentState` dictionary."]
     #[doc = ""]
@@ -44,7 +43,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "constants")]
-    pub fn get_constants(this: &GpuFragmentState) -> Option<js_sys::Object<js_sys::Number>>;
+    pub fn get_constants(this: &GpuFragmentState) -> Option<::js_sys::Object<::js_sys::Number>>;
 
     #[doc = "Change the `constants` field of this object."]
     #[doc = ""]
@@ -53,7 +52,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "constants")]
-    pub fn set_constants(this: &GpuFragmentState, val: &js_sys::Object<js_sys::Number>);
+    pub fn set_constants(this: &GpuFragmentState, val: &::js_sys::Object<::js_sys::Number>);
 
     #[doc = "Get the `entryPoint` field of this object."]
     #[doc = ""]
@@ -100,7 +99,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "targets")]
     pub fn get_targets(
         this: &GpuFragmentState,
-    ) -> js_sys::Array<js_sys::JsOption<GpuColorTargetState>>;
+    ) -> ::js_sys::Array<::js_sys::JsOption<GpuColorTargetState>>;
 
     #[doc = "Change the `targets` field of this object."]
     #[doc = ""]
@@ -109,7 +108,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "targets")]
-    pub fn set_targets(this: &GpuFragmentState, val: &[js_sys::JsOption<GpuColorTargetState>]);
+    pub fn set_targets(this: &GpuFragmentState, val: &[::js_sys::JsOption<GpuColorTargetState>]);
 }
 
 impl GpuFragmentState {
@@ -121,17 +120,17 @@ impl GpuFragmentState {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(
         module: &GpuShaderModule,
-        targets: &[js_sys::JsOption<GpuColorTargetState>],
+        targets: &[::js_sys::JsOption<GpuColorTargetState>],
     ) -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_module(module);
         ret.set_targets(targets);
         ret
     }
 
     #[deprecated = "Use `set_constants()` instead."]
-    pub fn constants(&mut self, val: &js_sys::Object<js_sys::Number>) -> &mut Self {
+    pub fn constants(&mut self, val: &::js_sys::Object<::js_sys::Number>) -> &mut Self {
         self.set_constants(val);
         self
     }
@@ -149,7 +148,7 @@ impl GpuFragmentState {
     }
 
     #[deprecated = "Use `set_targets()` instead."]
-    pub fn targets(&mut self, val: &[js_sys::JsOption<GpuColorTargetState>]) -> &mut Self {
+    pub fn targets(&mut self, val: &[::js_sys::JsOption<GpuColorTargetState>]) -> &mut Self {
         self.set_targets(val);
         self
     }

@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUSampler , typescript_type = "GPUSampler")]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUSampler , typescript_type = "GPUSampler")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuSampler` class."]
     #[doc = ""]

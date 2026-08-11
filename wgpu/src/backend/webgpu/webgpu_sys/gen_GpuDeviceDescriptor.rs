@@ -22,12 +22,11 @@
 #![allow(unused_imports)]
 #![allow(clippy::all)]
 use super::*;
-use crate::js::js_sys;
-use crate::js::wasm_bindgen::{self, prelude::*};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    # [wasm_bindgen (extends = js_sys:: Object , js_name = GPUDeviceDescriptor)]
+    # [wasm_bindgen (extends = :: js_sys :: Object , js_name = GPUDeviceDescriptor)]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `GpuDeviceDescriptor` dictionary."]
     #[doc = ""]
@@ -82,7 +81,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "requiredFeatures")]
     pub fn get_required_features(
         this: &GpuDeviceDescriptor,
-    ) -> Option<js_sys::Array<js_sys::JsString>>;
+    ) -> Option<::js_sys::Array<::js_sys::JsString>>;
 
     #[doc = "Change the `requiredFeatures` field of this object."]
     #[doc = ""]
@@ -91,7 +90,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "requiredFeatures")]
-    pub fn set_required_features(this: &GpuDeviceDescriptor, val: &[js_sys::JsString]);
+    pub fn set_required_features(this: &GpuDeviceDescriptor, val: &[::js_sys::JsString]);
 
     #[doc = "Get the `requiredLimits` field of this object."]
     #[doc = ""]
@@ -100,7 +99,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "requiredLimits")]
-    pub fn get_required_limits(this: &GpuDeviceDescriptor) -> Option<js_sys::Object>;
+    pub fn get_required_limits(this: &GpuDeviceDescriptor) -> Option<::js_sys::Object>;
 
     #[doc = "Change the `requiredLimits` field of this object."]
     #[doc = ""]
@@ -109,7 +108,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "requiredLimits")]
-    pub fn set_required_limits(this: &GpuDeviceDescriptor, val: &js_sys::Object<js_sys::Number>);
+    pub fn set_required_limits(
+        this: &GpuDeviceDescriptor,
+        val: &::js_sys::Object<::js_sys::Number>,
+    );
 
     #[doc = "Change the `requiredLimits` field of this object."]
     #[doc = ""]
@@ -120,7 +122,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "requiredLimits")]
     pub fn set_required_limits_record_from_str_to_f64(
         this: &GpuDeviceDescriptor,
-        val: &js_sys::Object<js_sys::Number>,
+        val: &::js_sys::Object<::js_sys::Number>,
     );
 }
 
@@ -133,7 +135,7 @@ impl GpuDeviceDescriptor {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new() -> Self {
         #[allow(unused_mut)]
-        let mut ret: Self = wasm_bindgen::JsCast::unchecked_into(js_sys::Object::new());
+        let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
 
@@ -150,13 +152,13 @@ impl GpuDeviceDescriptor {
     }
 
     #[deprecated = "Use `set_required_features()` instead."]
-    pub fn required_features(&mut self, val: &[js_sys::JsString]) -> &mut Self {
+    pub fn required_features(&mut self, val: &[::js_sys::JsString]) -> &mut Self {
         self.set_required_features(val);
         self
     }
 
     #[deprecated = "Use `set_required_limits()` instead."]
-    pub fn required_limits(&mut self, val: &js_sys::Object<js_sys::Number>) -> &mut Self {
+    pub fn required_limits(&mut self, val: &::js_sys::Object<::js_sys::Number>) -> &mut Self {
         self.set_required_limits(val);
         self
     }
