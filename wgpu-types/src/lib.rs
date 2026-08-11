@@ -14,23 +14,6 @@
 )]
 #![no_std]
 
-// On WASI `js-sys` and `web-sys` are not dependencies at all: wasm-bindgen has no
-// loader there — `wasm-bindgen-cli` emits its JS glue for `wasm32-unknown-unknown`
-// only, and on WASI every binding compiles to a stub that panics — so the
-// `napi-web` feature binds the same JavaScript objects over Node-API instead.
-// Asking for `web` without it is refused here rather than at the first import that
-// fails to resolve.
-#[cfg(all(
-    target_family = "wasm",
-    target_os = "wasi",
-    feature = "web",
-    not(feature = "napi-web")
-))]
-compile_error!(
-    "wgpu-types: on `wasm32-wasip1(-threads)` the `web` feature needs `napi-web` \
-     alongside it — wasm-bindgen has no loader for WASI."
-);
-
 #[cfg(any(feature = "std", test))]
 extern crate std;
 

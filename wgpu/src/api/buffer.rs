@@ -7,9 +7,9 @@ use core::{
 
 use crate::util::Mutex;
 use crate::*;
-#[cfg(all(webgpu, not(napi_web)))]
+#[cfg(all(webgpu, web_bindgen))]
 use js_sys::Uint8Array;
-#[cfg(napi_web)]
+#[cfg(all(webgpu, web_napi))]
 use napi_rs_webgpu::Uint8Array;
 
 /// Handle to a GPU-accessible buffer.

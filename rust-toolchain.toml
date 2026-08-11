@@ -1,7 +1,7 @@
 [toolchain]
 channel = "1.93"
 components = ["cargo", "rustfmt", "clippy"]
-# `wasm32-wasip1(-threads)` are for the `napi-web` configuration of the WebGPU
+# `wasm32-wasip1(-threads)` are for the Node-API configuration of the WebGPU
 # backend, which reaches JavaScript through Node-API instead of wasm-bindgen.
 targets = [
     "wasm32-unknown-unknown",

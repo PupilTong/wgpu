@@ -37,9 +37,9 @@ use crate::backend::custom::*;
 use crate::backend::webgpu::*;
 #[cfg(wgpu_core)]
 use crate::backend::wgpu_core::*;
-#[cfg(all(webgpu, not(napi_web)))]
+#[cfg(all(webgpu, web_bindgen))]
 use js_sys::Uint8Array;
-#[cfg(napi_web)]
+#[cfg(all(webgpu, web_napi))]
 use napi_rs_webgpu::Uint8Array;
 
 /// Create a single trait with the given supertraits and a blanket impl for all types that implement them.

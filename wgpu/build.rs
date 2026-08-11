@@ -3,10 +3,16 @@ fn main() {
         native: { not(target_family = "wasm") },
         Emscripten: { all(target_family = "wasm", target_os = "emscripten") },
         web: { all(target_family = "wasm", not(Emscripten), feature = "web") },
-        // WASI, where wasm-bindgen's JS glue does not exist: `napi_web` routes
-        // `crate::js` at the Node-API shim instead. See `wgpu/src/js.rs`.
         wasi: { all(target_family = "wasm", target_os = "wasi") },
-        napi_web: { all(wasi, feature = "napi-web") },
+
+        // Which route the `web` feature takes to JavaScript. The target decides,
+        // not a feature, because on each target exactly one of the two can work:
+        // wasm-bindgen's bindings are satisfied by JS glue that `wasm-bindgen-cli`
+        // emits for `wasm32-unknown-unknown` only, and on WASI it compiles every
+        // binding to a stub that panics — so there the same JavaScript objects are
+        // reached over Node-API (napi-rs / emnapi) through `napi-rs-webgpu`.
+        web_bindgen: { all(web, not(wasi)) },
+        web_napi: { all(web, wasi) },
 
         send_sync: { any(
             native,

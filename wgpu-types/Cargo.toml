@@ -50,11 +50,12 @@ serde = [
 counters = []
 # Enables variants of `Trace` other than `Trace::Off`
 trace = ["std", "serde/std"]
-# Enable web-specific dependencies for wasm.
-web = ["dep:js-sys", "dep:web-sys"]
-# Reach the same JS objects through Node-API instead of wasm-bindgen, for WASI
-# targets. See `wgpu`'s feature of the same name and `src/js.rs`.
-napi-web = ["web", "std", "dep:napi-rs-webgpu"]
+# Enable web-specific dependencies for wasm. Which ones is decided by the target:
+# `js-sys` and `web-sys` everywhere wasm-bindgen has a loader, and `napi-rs-webgpu`
+# on WASI, where it has none and the same JavaScript objects are reached over
+# Node-API. Both sets are declared for the targets they apply to, so only one is
+# ever resolved.
+web = ["dep:js-sys", "dep:web-sys", "dep:napi-rs-webgpu"]
 exhaust = ["dep:exhaust"]
 
 [dependencies]
@@ -72,8 +73,8 @@ serde = { workspace = true, default-features = false, features = [
 ], optional = true }
 static_assertions.workspace = true
 
-# Not for WASI: wasm-bindgen has no loader there, so `napi-web` binds the same
-# JavaScript objects over Node-API instead and these three are never resolved.
+# Not for WASI: wasm-bindgen has no loader there, so `web` means `napi-rs-webgpu`
+# instead and these two are never resolved.
 [target.'cfg(all(target_family = "wasm", not(target_os = "wasi")))'.dependencies]
 js-sys = { workspace = true, optional = true, default-features = false }
 web-sys = { workspace = true, optional = true, default-features = false, features = [
@@ -86,6 +87,7 @@ web-sys = { workspace = true, optional = true, default-features = false, feature
     "VideoFrame",
 ] }
 
+# What `web` means on WASI: the DOM types bound over Node-API.
 [target.'cfg(all(target_family = "wasm", target_os = "wasi"))'.dependencies]
 napi-rs-webgpu = { workspace = true, optional = true }
 

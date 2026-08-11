@@ -83,20 +83,10 @@ angle = ["wgpu-core?/angle"]
 vulkan-portability = ["wgpu-core?/vulkan-portability"]
 
 ## Enables the GLES backend on WebAssembly only.
+##
+## Not available on `wasm32-wasip1(-threads)`: WebGL2 is driven through
+## wasm-bindgen, which has no loader there. Use [`webgpu`](#webgpu) on WASI.
 webgl = ["web", "wgpu-core/webgl", "dep:wgpu-hal", "dep:smallvec"]
-
-## Reaches JavaScript through Node-API (napi-rs / emnapi) instead of wasm-bindgen,
-## for `wasm32-wasip1` and `wasm32-wasip1-threads`.
-##
-## WASI modules cannot use wasm-bindgen: its bindings are satisfied by JS glue that
-## `wasm-bindgen-cli` only emits for `wasm32-unknown-unknown`, and on WASI it
-## compiles them to stubs that panic, so such a build loads and then aborts on its
-## first JavaScript call. With this feature the [`webgpu`](#webgpu) backend calls
-## the very same `navigator.gpu` objects through Node-API, which is what a napi-rs
-## addon (`@napi-rs/wasm-runtime` + emnapi) has available in the browser.
-##
-## Requires `webgpu`, and has no effect on any target other than WASI.
-napi-web = ["webgpu", "std", "dep:napi-rs-webgpu", "wgpu-types/napi-web"]
 
 #! ### Backend features
 
@@ -182,9 +172,29 @@ fragile-send-sync-non-atomic-wasm = [
 
 ## Use web-specific libraries on WASM
 ##
-## Those libraries (wasm-bindgen, web-sys, js-sys) can only be used when there is a JavaScript
-## context around the WASM VM, e.g., when the WASM binary is used in a browser.
-web = ["dep:wasm-bindgen", "dep:js-sys", "dep:web-sys", "wgpu-types/web"]
+## Those libraries can only be used when there is a JavaScript context around the
+## WASM VM, e.g., when the WASM binary is used in a browser.
+##
+## Which libraries those are is decided by the target, not by another feature,
+## because on each target exactly one set can work:
+##
+## * `wasm32-unknown-unknown` — wasm-bindgen, `js-sys` and `web-sys`, resolved by
+##   the JS glue `wasm-bindgen-cli` emits;
+## * `wasm32-wasip1` and `wasm32-wasip1-threads` — `napi-rs-webgpu`, which binds the
+##   same JavaScript objects over Node-API (napi-rs / emnapi), because there is no
+##   wasm-bindgen glue for WASI and wasm-bindgen compiles every binding to a stub
+##   that panics.
+##
+## On `wasm32-unknown-emscripten` this feature selects nothing inside `wgpu`: its
+## JavaScript is reached through Emscripten's own runtime, and every `web`-gated
+## item here is excluded from that target.
+web = [
+    "dep:wasm-bindgen",
+    "dep:js-sys",
+    "dep:web-sys",
+    "dep:napi-rs-webgpu",
+    "wgpu-types/web",
+]
 
 ## Enables use of the standard library within `wgpu` and its dependencies.
 ##
@@ -221,6 +231,7 @@ exhaust = ["wgpu-types/exhaust"]
 naga = { workspace = true, optional = true, features = ["termcolor"] }
 wgpu-core = { workspace = true, optional = true }
 wgpu-types.workspace = true
+napi-rs-webgpu = { workspace = true, optional = true }
 
 # Needed for both wgpu-core and webgpu
 arrayvec.workspace = true
@@ -263,10 +274,10 @@ wgpu-hal = { workspace = true, optional = true }
 
 smallvec = { workspace = true, optional = true }
 
-# The wasm-bindgen family, which every JavaScript-facing feature is written against
-# except on WASI. There wasm-bindgen has no loader — `wasm-bindgen-cli` emits its JS
-# glue for `wasm32-unknown-unknown` only — so the `napi-web` feature binds the same
-# JavaScript objects over Node-API and these four are not resolved at all.
+# The wasm-bindgen family, which the `web` feature means on every wasm target but
+# WASI. There wasm-bindgen has no loader — `wasm-bindgen-cli` emits its JS glue for
+# `wasm32-unknown-unknown` only — so `web` means `napi-rs-webgpu` instead and these
+# four are not resolved at all.
 [target.'cfg(all(target_family = "wasm", not(target_os = "emscripten"), not(target_os = "wasi")))'.dependencies]
 # Needed for all backends
 js-sys = { workspace = true, optional = true }
@@ -283,9 +294,9 @@ wasm-bindgen-futures = { workspace = true, optional = true }
 # WebAssembly / WASI #
 ######################
 [target.'cfg(all(target_family = "wasm", target_os = "wasi"))'.dependencies]
-# The Node-API stand-in for the wasm-bindgen family, selected by the `napi-web`
-# feature. Optional, and only ever resolved for WASI targets.
-napi-rs-webgpu = { workspace = true, optional = true }
+# What the `web` feature means here: WebGPU and the DOM bound over Node-API. Only
+# ever resolved for WASI targets, which is what makes `web` select by target.
+# MUTATION-UNDER-TEST: moved to shared [dependencies] above.
 
 ##############
 # Emscripten #

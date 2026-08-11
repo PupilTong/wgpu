@@ -4,7 +4,7 @@ mod defined_non_null_js_value;
 // The `navigator.gpu` extension trait, which is wasm-bindgen's way of reaching a
 // property `web-sys` does not declare. `napi-rs-webgpu` reads it directly, so this
 // has nothing to add there.
-#[cfg(not(napi_web))]
+#[cfg(web_bindgen)]
 mod ext_bindings;
 
 // `webgpu_sys` is web-sys' generated WebGPU bindings, vendored verbatim, and they
@@ -12,10 +12,10 @@ mod ext_bindings;
 // `napi-rs-webgpu`, which binds WebGPU over Node-API; the generated files are not
 // compiled there at all, so they stay exactly as `cargo xtask vendor-web-sys`
 // wrote them.
-#[cfg(not(napi_web))]
+#[cfg(web_bindgen)]
 #[allow(clippy::allow_attributes)]
 pub(crate) mod webgpu_sys;
-#[cfg(napi_web)]
+#[cfg(web_napi)]
 pub(crate) use napi_rs_webgpu as webgpu_sys;
 
 use alloc::{
@@ -38,23 +38,23 @@ use core::{
 };
 use wgt::Backends;
 
-// The JavaScript types this backend names: from the wasm-bindgen family normally,
-// and from `napi-rs-webgpu` under `napi-web`, where wasm-bindgen has no loader.
-// They are the same JavaScript objects either way, so everything below is written
-// once and only these two `use` blocks differ.
+// The JavaScript types this backend names: from the wasm-bindgen family on the
+// targets where its loader exists, and from `napi-rs-webgpu` on WASI, where it does
+// not. They are the same JavaScript objects either way, so everything below is
+// written once and only these two `use` blocks differ.
 //
 // `JsException` is the one name the two crates disagree on: it is what a throwing
 // call hands back. `web-sys` spells it `JsValue`, because JavaScript may `throw`
 // any value at all; `napi-rs-webgpu` keeps that same value in an `Error` that can
 // read a `message` off it.
-#[cfg(napi_web)]
+#[cfg(web_napi)]
 use napi_rs_webgpu::{
     callback::Closure,
     futures::{spawn_local, JsFuture},
     window, ArrayBuffer, Error as JsException, HtmlCanvasElement, JsCast, JsOption, JsString,
     JsValue, Number, Object, OffscreenCanvas, Promise, Reflect, Uint8Array, Undefined,
 };
-#[cfg(not(napi_web))]
+#[cfg(web_bindgen)]
 use {
     js_sys::{
         ArrayBuffer, JsOption, JsString, Number, Object, Promise, Reflect, Uint8Array, Undefined,
@@ -1248,7 +1248,7 @@ impl ContextWebGpu {
 // It can be cast to from `webgpu_sys::global` and exposes two getters `window` and `worker` of which only one is defined depending on the caller's context.
 // When called from the UI thread only `window` is defined whereas `worker` is only defined within a web worker context.
 // See: https://github.com/rustwasm/gloo/blob/2c9e776701ecb90c53e62dec1abd19c2b70e47c7/crates/timers/src/callback.rs#L8-L40
-#[cfg(not(napi_web))]
+#[cfg(web_bindgen)]
 #[wasm_bindgen::prelude::wasm_bindgen]
 extern "C" {
     type Global;
@@ -1282,7 +1282,7 @@ pub struct BrowserGpuPropertyInaccessible;
 /// See:
 /// * <https://developer.mozilla.org/en-US/docs/Web/API/Navigator/gpu>
 /// * <https://developer.mozilla.org/en-US/docs/Web/API/WorkerNavigator/gpu>
-#[cfg(not(napi_web))]
+#[cfg(web_bindgen)]
 pub fn get_browser_gpu_property(
 ) -> Result<Option<DefinedNonNullJsValue<webgpu_sys::Gpu>>, BrowserGpuPropertyInaccessible> {
     let global: Global = js_sys::global().unchecked_into();
@@ -1301,8 +1301,8 @@ pub fn get_browser_gpu_property(
     Ok(DefinedNonNullJsValue::new(maybe_undefined_gpu))
 }
 
-/// The `napi-web` counterpart, where the `GPU` is asked for rather than searched
-/// for on a global.
+/// The WASI counterpart, where the `GPU` is asked for rather than searched for on
+/// a global.
 ///
 /// The two branches above are how a browser tells its main thread from a dedicated
 /// worker — the contexts that have `navigator.gpu`. A Node-API host need not define
@@ -1314,7 +1314,7 @@ pub fn get_browser_gpu_property(
 /// `Err(BrowserGpuPropertyInaccessible)` is therefore reserved for the one case it
 /// still describes: no environment installed on this thread, so there is no
 /// JavaScript to ask.
-#[cfg(napi_web)]
+#[cfg(web_napi)]
 pub fn get_browser_gpu_property(
 ) -> Result<Option<DefinedNonNullJsValue<webgpu_sys::Gpu>>, BrowserGpuPropertyInaccessible> {
     if !napi_rs_webgpu::is_installed() {
