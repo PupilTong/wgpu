@@ -6,3 +6,8 @@ naga/tests/out/
 # Machine-written: `napi-rs-webgpu/tools/extract_surface.py` emits it, and
 # re-running the tool has to leave the file unchanged.
 napi-rs-webgpu/tools/surface.json
+
+# Cargo build output. The root `.gitignore`'s `/target` is anchored, so it does
+# not cover the one `napi-rs-webgpu/harness` builds into, and prettier reads only
+# the root ignore files.
+**/target/

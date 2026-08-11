@@ -36,31 +36,36 @@
 //! # Using it
 //!
 //! Node-API operations need an `napi_env`, and WebGPU's API has nowhere to carry
-//! one, so the addon installs it per thread before its first call:
-//!
-//! ```ignore
-//! #[napi::module_init]
-//! fn init(env: napi::Env) {
-//!     // SAFETY: `env` is live for the lifetime of the module on this thread.
-//!     unsafe { napi_rs_webgpu::install(env.raw()) };
-//! }
-//! ```
-//!
-//! The `GPU` itself is passed in rather than discovered, because a host need not
-//! put it on a global: node-webgpu's `create([])` hands back a `GPU` and installs
-//! no `navigator`. [`install_gpu`] takes that object, with [`adopt_js_value`]
-//! turning the raw `napi_value` into one of this crate's handles:
+//! one, so the addon installs it per thread before its first call. The `GPU` is
+//! passed in rather than discovered for the same kind of reason: a host need not
+//! put it on a global, and node-webgpu's `create([])` hands one back while
+//! installing no `navigator`. [`adopt_js_value`] turns the raw `napi_value` into
+//! one of this crate's handles:
 //!
 //! ```ignore
 //! #[napi]
-//! fn install_webgpu(env: napi::Env, gpu: napi::JsUnknown) {
-//!     // SAFETY: `gpu` is live in the handle scope Node opened for this call.
-//!     unsafe { napi_rs_webgpu::install_gpu(napi_rs_webgpu::adopt_js_value(env.raw(), gpu.raw())) };
+//! fn install_webgpu(env: napi::Env, gpu: napi::Unknown) {
+//!     // SAFETY: `env` is this thread's environment, live for as long as the
+//!     // module is loaded, and `gpu` is live in the handle scope Node opened
+//!     // for this call.
+//!     unsafe {
+//!         napi_rs_webgpu::install(env.raw());
+//!         napi_rs_webgpu::install_gpu(napi_rs_webgpu::adopt_js_value(env.raw(), gpu.raw()));
+//!     }
 //! }
 //! ```
 //!
+//! Both happen in a `#[napi]` function rather than at module load because
+//! napi-rs' `#[module_init]` is a static constructor: it runs before Node-API
+//! exists and is handed no environment, so the first `#[napi]` call is the
+//! earliest point one is available.
+//!
 //! When a host does expose `navigator.gpu` — every browser — [`gpu`] finds it
-//! there instead, and nothing needs to be installed.
+//! there instead, and only [`install`] is needed.
+//!
+//! `harness/` is a worked example of all of this: an addon built for
+//! `wasm32-wasip1-threads` that renders a triangle through node-webgpu and checks
+//! the pixels.
 //!
 //! Every thread that touches WebGPU needs its own [`install`], because a
 //! `napi_env`, and every JavaScript value reached through it, belongs to one
