@@ -34,12 +34,6 @@ js_type! {
 
 webgpu_members! {
     GpuQuerySet;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Getter for the `type` field of this object.
-    getter type_() -> GpuQueryType as "type";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `destroy()` method.
     method destroy() as "destroy";
 }
@@ -57,12 +51,8 @@ webgpu_dictionary! {
     GpuQuerySetDescriptor;
     /// Construct a new `GpuQuerySetDescriptor`.
     new new(count: u32 as "count", type_: GpuQueryType as "type");
-    /// Change the `count` field of this object.
-    setter set_count(val: u32) as "count";
     /// Change the `label` field of this object.
     setter set_label(val: &str) as "label";
-    /// Change the `type` field of this object.
-    setter set_type(val: GpuQueryType) as "type";
 }
 
 js_type! {

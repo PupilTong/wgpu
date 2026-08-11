@@ -24,14 +24,6 @@ js_type! {
     instanceof(value) { crate::napi::rt::instance_of(value, c"GPUCommandBuffer") },
 }
 
-webgpu_members! {
-    GpuCommandBuffer;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
-}
-
 js_type! {
     /// The `GPUCommandEncoder` interface.
     ///
@@ -44,8 +36,6 @@ webgpu_members! {
     GpuCommandEncoder;
     /// Getter for the `label` field of this object.
     getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `beginComputePass()` method.
     method begin_compute_pass_with_descriptor(
         descriptor: &GpuComputePassDescriptor,
@@ -127,10 +117,6 @@ js_type! {
 
 webgpu_members! {
     GpuComputePassEncoder;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `dispatchWorkgroupsIndirect()` method.
     method dispatch_workgroups_indirect_with_f64(
         indirect_buffer: &GpuBuffer,
@@ -172,14 +158,6 @@ js_type! {
     instanceof(value) { crate::napi::rt::instance_of(value, c"GPURenderBundle") },
 }
 
-webgpu_members! {
-    GpuRenderBundle;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
-}
-
 js_type! {
     /// The `GPURenderBundleEncoder` interface.
     ///
@@ -190,10 +168,6 @@ js_type! {
 
 webgpu_members! {
     GpuRenderBundleEncoder;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `drawIndexedIndirect()` method.
     method draw_indexed_indirect_with_f64(
         indirect_buffer: &GpuBuffer,
@@ -225,12 +199,6 @@ webgpu_members! {
     method finish_with_descriptor(
         descriptor: &GpuRenderBundleDescriptor,
     ) -> GpuRenderBundle as "finish";
-    /// The `insertDebugMarker()` method.
-    method insert_debug_marker(marker_label: &str) as "insertDebugMarker";
-    /// The `popDebugGroup()` method.
-    method pop_debug_group() as "popDebugGroup";
-    /// The `pushDebugGroup()` method.
-    method push_debug_group(group_label: &str) as "pushDebugGroup";
     /// The `setBindGroup()` method.
     method set_bind_group(index: u32, bind_group: Option<&GpuBindGroup>) as "setBindGroup";
     /// The `setBindGroup()` method.
@@ -281,10 +249,6 @@ js_type! {
 
 webgpu_members! {
     GpuRenderPassEncoder;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `beginOcclusionQuery()` method.
     method begin_occlusion_query(query_index: u32) as "beginOcclusionQuery";
     /// The `drawIndexedIndirect()` method.

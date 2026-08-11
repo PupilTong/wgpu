@@ -74,10 +74,6 @@ webgpu_dictionary! {
     setter set_label(val: &str) as "label";
     /// Change the `mappedAtCreation` field of this object.
     setter set_mapped_at_creation(val: bool) as "mappedAtCreation";
-    /// Change the `size` field of this object.
-    setter set_size_f64(val: f64) as "size";
-    /// Change the `usage` field of this object.
-    setter set_usage(val: u32) as "usage";
 }
 
 js_type! {
@@ -95,8 +91,6 @@ webgpu_dictionary! {
     new new(device: &GpuDevice as "device", format: GpuTextureFormat as "format");
     /// Change the `alphaMode` field of this object.
     setter set_alpha_mode(val: GpuCanvasAlphaMode) as "alphaMode";
-    /// Change the `format` field of this object.
-    setter set_format(val: GpuTextureFormat) as "format";
     /// Change the `toneMapping` field of this object.
     setter set_tone_mapping(val: &GpuCanvasToneMapping) as "toneMapping";
     /// Change the `usage` field of this object.
@@ -232,51 +226,6 @@ webgpu_dictionary! {
 webgpu_default!(GpuDeviceDescriptor, new);
 
 js_type! {
-    /// The WebGPU `GPUExternalTextureDescriptor` dictionary.
-    ///
-    /// A dictionary is a plain object with no class of its own, so the cast
-    /// tests for an object rather than for a constructor.
-    GpuExternalTextureDescriptor: [crate::Object, crate::JsValue],
-    instanceof(value) { value.is_object() },
-}
-
-webgpu_dictionary! {
-    GpuExternalTextureDescriptor;
-    /// Change the `label` field of this object.
-    setter set_label(val: &str) as "label";
-}
-
-js_type! {
-    /// The WebGPU `GPUObjectDescriptorBase` dictionary.
-    ///
-    /// A dictionary is a plain object with no class of its own, so the cast
-    /// tests for an object rather than for a constructor.
-    GpuObjectDescriptorBase: [crate::Object, crate::JsValue],
-    instanceof(value) { value.is_object() },
-}
-
-webgpu_dictionary! {
-    GpuObjectDescriptorBase;
-    /// Change the `label` field of this object.
-    setter set_label(val: &str) as "label";
-}
-
-js_type! {
-    /// The WebGPU `GPUPipelineDescriptorBase` dictionary.
-    ///
-    /// A dictionary is a plain object with no class of its own, so the cast
-    /// tests for an object rather than for a constructor.
-    GpuPipelineDescriptorBase: [crate::Object, crate::JsValue],
-    instanceof(value) { value.is_object() },
-}
-
-webgpu_dictionary! {
-    GpuPipelineDescriptorBase;
-    /// Change the `label` field of this object.
-    setter set_label(val: &str) as "label";
-}
-
-js_type! {
     /// The WebGPU `GPUPipelineLayoutDescriptor` dictionary.
     ///
     /// A dictionary is a plain object with no class of its own, so the cast
@@ -289,21 +238,6 @@ webgpu_dictionary! {
     GpuPipelineLayoutDescriptor;
     /// Construct a new `GpuPipelineLayoutDescriptor`.
     new new(bind_group_layouts: &[crate::JsOption<GpuBindGroupLayout>] as "bindGroupLayouts");
-    /// Change the `label` field of this object.
-    setter set_label(val: &str) as "label";
-}
-
-js_type! {
-    /// The WebGPU `GPUQueueDescriptor` dictionary.
-    ///
-    /// A dictionary is a plain object with no class of its own, so the cast
-    /// tests for an object rather than for a constructor.
-    GpuQueueDescriptor: [crate::Object, crate::JsValue],
-    instanceof(value) { value.is_object() },
-}
-
-webgpu_dictionary! {
-    GpuQueueDescriptor;
     /// Change the `label` field of this object.
     setter set_label(val: &str) as "label";
 }
@@ -466,21 +400,6 @@ webgpu_dictionary! {
 webgpu_default!(GpuSamplerDescriptor, new);
 
 js_type! {
-    /// The WebGPU `GPUShaderModuleCompilationHint` dictionary.
-    ///
-    /// A dictionary is a plain object with no class of its own, so the cast
-    /// tests for an object rather than for a constructor.
-    GpuShaderModuleCompilationHint: [crate::Object, crate::JsValue],
-    instanceof(value) { value.is_object() },
-}
-
-webgpu_dictionary! {
-    GpuShaderModuleCompilationHint;
-    /// Change the `entryPoint` field of this object.
-    setter set_entry_point(val: &str) as "entryPoint";
-}
-
-js_type! {
     /// The WebGPU `GPUShaderModuleDescriptor` dictionary.
     ///
     /// A dictionary is a plain object with no class of its own, so the cast
@@ -516,16 +435,12 @@ webgpu_dictionary! {
     );
     /// Change the `dimension` field of this object.
     setter set_dimension(val: GpuTextureDimension) as "dimension";
-    /// Change the `format` field of this object.
-    setter set_format(val: GpuTextureFormat) as "format";
     /// Change the `label` field of this object.
     setter set_label(val: &str) as "label";
     /// Change the `mipLevelCount` field of this object.
     setter set_mip_level_count(val: u32) as "mipLevelCount";
     /// Change the `sampleCount` field of this object.
     setter set_sample_count(val: u32) as "sampleCount";
-    /// Change the `usage` field of this object.
-    setter set_usage(val: u32) as "usage";
     /// Change the `viewFormats` field of this object.
     setter set_view_formats(val: &[crate::JsString]) as "viewFormats";
 }

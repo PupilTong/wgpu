@@ -382,6 +382,8 @@ class Surface:
     """`surface.json`, with the entries the crate does not emit already dropped."""
 
     def __init__(self, spec: dict):
+        self.all_interfaces = set(spec["interfaces"])
+        self.all_enums = set(spec["enums"])
         self.enums = {
             name: entry for name, entry in spec["enums"].items() if entry["used"]
         }
@@ -798,8 +800,13 @@ def main() -> int:
     if misfiled:
         modules.append((FALLBACK_MODULE, (FALLBACK_MODULE_DOC, misfiled)))
 
+    # Every type the spec declares, not only the ones being emitted: a member
+    # may name a type whose own entry is not `used`, and that has to become an
+    # unresolved import for `tools/shake.py` to notice rather than a crash here.
+    # A type the tables have no mapping for at all is still a hard error.
+    known_types = surface.all_interfaces | surface.all_enums
     for module, (doc, names) in modules:
-        types = Types(set(surface.interfaces) | set(surface.enums))
+        types = Types(known_types)
         body: list[str] = []
         for name in sorted(names):
             entry = surface.interfaces.get(name)

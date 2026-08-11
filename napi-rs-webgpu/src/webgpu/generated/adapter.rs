@@ -82,14 +82,8 @@ js_type! {
 
 webgpu_members! {
     GpuSupportedFeatures;
-    /// Getter for the `size` field of this object.
-    getter size() -> u32 as "size";
-    /// The `forEach()` method.
-    method for_each(callback: &crate::JsValue) as "forEach" catch;
     /// The `has()` method.
     method has(value: &str) -> bool as "has";
-    /// The `keys()` method.
-    method keys() -> crate::JsIterator<crate::JsString> as "keys";
 }
 
 js_type! {
@@ -179,12 +173,6 @@ js_type! {
 
 webgpu_members! {
     WgslLanguageFeatures as "WGSLLanguageFeatures";
-    /// Getter for the `size` field of this object.
-    getter size() -> u32 as "size";
-    /// The `forEach()` method.
-    method for_each(callback: &crate::JsValue) as "forEach" catch;
-    /// The `has()` method.
-    method has(value: &str) -> bool as "has";
     /// The `keys()` method.
     method keys() -> crate::JsIterator<crate::JsString> as "keys";
 }

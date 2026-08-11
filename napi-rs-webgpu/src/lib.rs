@@ -22,11 +22,13 @@
 //!
 //! # Scope
 //!
-//! The bindings cover what a WebGPU consumer actually calls, derived from
-//! `wgpu`'s backend rather than guessed: 94 interfaces, 437 members, 32 string
-//! enums and one namespace, out of the 1156 members `web-sys` generates.
-//! `tools/extract_surface.py` recomputes that set from the IDL-generated bindings,
-//! so the scope can be re-derived rather than maintained by hand.
+//! The bindings cover what `wgpu` actually calls and nothing else: 88 interfaces,
+//! 364 members, 32 string enums and one namespace, out of the 1156 members
+//! `web-sys` generates. That set is not a judgement — `tools/extract_surface.py`
+//! derives the whole surface from the IDL-generated bindings and `tools/shake.py`
+//! then empties it and adds back exactly what the compiler asks for, so removing
+//! any of what is left breaks a build. Both are commands, so a `wgpu` that reaches
+//! further is a re-run away from having its bindings back.
 //!
 //! Alongside them are the JavaScript language types WebGPU's IDL names — [`Object`],
 //! [`Promise`], [`JsString`], [`JsOption`], [`JsIterator`], [`ArrayBuffer`] and the
@@ -85,7 +87,7 @@ mod support;
 mod typed_array;
 mod webgpu;
 
-pub use builtins::{global, JsIter, JsIterator, JsOption, JsString, Number, Reflect, Undefined};
+pub use builtins::{JsIter, JsIterator, JsOption, JsString, Number, Reflect, Undefined};
 pub use dom::*;
 pub use entry::{adopt_js_value, gpu, install_gpu};
 pub use napi::env::{install, is_installed, uninstall};

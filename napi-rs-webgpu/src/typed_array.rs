@@ -36,11 +36,6 @@ impl ArrayBuffer {
     pub fn new(length: u32) -> Self {
         crate::dsl::construct(c"ArrayBuffer", &[JsValue::from(length)], "new ArrayBuffer")
     }
-
-    /// The buffer's `byteLength`, or `0` if it has been detached.
-    pub fn byte_length(&self) -> u32 {
-        crate::dsl::get_property(self.js(), c"byteLength", "ArrayBuffer.byteLength")
-    }
 }
 
 /// Whether `value` is an `ArrayBuffer`.
@@ -92,26 +87,6 @@ macro_rules! typed_array {
                 )
             }
 
-            /// A new array of `length` elements, zero-filled.
-            pub fn new_with_length(length: u32) -> Self {
-                crate::dsl::construct(
-                    $class,
-                    &[JsValue::from(length)],
-                    concat!("new ", stringify!($name)),
-                )
-            }
-
-            /// A view onto `buffer` starting at `byte_offset` and running to its end.
-            ///
-            /// A real JavaScript view: no bytes are copied.
-            pub fn new_with_byte_offset(buffer: &JsValue, byte_offset: u32) -> Self {
-                crate::dsl::construct(
-                    $class,
-                    &[buffer.clone(), JsValue::from(byte_offset)],
-                    concat!("new ", stringify!($name)),
-                )
-            }
-
             /// A view onto `buffer` of `length` elements starting at `byte_offset`.
             ///
             /// A real JavaScript view: no bytes are copied.
@@ -145,34 +120,6 @@ macro_rules! typed_array {
                     self.js(),
                     c"length",
                     concat!(stringify!($name), ".length"),
-                )
-            }
-
-            /// The size of the view in bytes.
-            pub fn byte_length(&self) -> u32 {
-                crate::dsl::get_property(
-                    self.js(),
-                    c"byteLength",
-                    concat!(stringify!($name), ".byteLength"),
-                )
-            }
-
-            /// The view's offset within its `ArrayBuffer`, in bytes.
-            pub fn byte_offset(&self) -> u32 {
-                crate::dsl::get_property(
-                    self.js(),
-                    c"byteOffset",
-                    concat!(stringify!($name), ".byteOffset"),
-                )
-            }
-
-            /// `this.subarray(begin, end)`: another view onto the same buffer.
-            pub fn subarray(&self, begin: u32, end: u32) -> Self {
-                crate::dsl::call_method(
-                    self.js(),
-                    c"subarray",
-                    &[JsValue::from(begin), JsValue::from(end)],
-                    concat!(stringify!($name), ".subarray"),
                 )
             }
 
@@ -254,12 +201,12 @@ macro_rules! typed_array {
                 ))
             }
 
-            /// Copies this view's elements into `dst`.
+            /// This view's elements in a new vector.
+            /// Reads the view's elements into `dst`, which must be the same length.
             ///
-            /// # Panics
-            ///
-            /// If `dst` is not exactly as long as this view.
-            pub fn copy_to(&self, dst: &mut [$element]) {
+            /// Private because `to_vec` is the only caller: `wgpu` reads a mapped
+            /// buffer by taking the whole thing, never into a buffer it already has.
+            fn copy_to(&self, dst: &mut [$element]) {
                 let length = self.length() as usize;
                 assert_eq!(
                     length,
@@ -289,22 +236,6 @@ macro_rules! typed_array {
                 rt::unwrap_js(copied, concat!("reading a JavaScript ", stringify!($name)));
             }
 
-            /// Copies `src` into this view.
-            ///
-            /// # Panics
-            ///
-            /// If `src` is not exactly as long as this view.
-            pub fn copy_from(&self, src: &[$element]) {
-                assert_eq!(
-                    self.length() as usize,
-                    src.len(),
-                    concat!(stringify!($name), "::copy_from needs a source of the same \
-                             length as the view")
-                );
-                self.set(Self::from_slice(src).js(), 0);
-            }
-
-            /// This view's elements in a new vector.
             pub fn to_vec(&self) -> Vec<$element> {
                 // Allocated before the handle scope opens: `copy_to` holds a raw
                 // pointer into the runtime's memory, and nothing else should run
@@ -348,15 +279,13 @@ typed_array! {
     /// immediately does `actual_mapping.set(&view, 0)`, which still ends with the
     /// right bytes in the right place, at the cost of one extra copy.
     ///
-    /// Reading is the mirror image: [`Uint8Array::copy_to`] and
-    /// [`Uint8Array::to_vec`] ask `napi_get_typedarray_info` for the element pointer
-    /// and copy out of it.
+    /// Reading is the mirror image: [`Uint8Array::to_vec`] asks
+    /// `napi_get_typedarray_info` for the element pointer and copies out of it.
     ///
-    /// Only the Rust⇄JavaScript crossing copies. Views *created in JavaScript* —
-    /// [`Uint8Array::new_with_byte_offset_and_length`] and [`Uint8Array::subarray`],
-    /// which are `new Uint8Array(buffer, offset, length)` and `subarray` — are
-    /// ordinary zero-copy JavaScript views onto their `ArrayBuffer`, exactly as on the
-    /// web.
+    /// Only the Rust⇄JavaScript crossing copies. A view *created in JavaScript* —
+    /// [`Uint8Array::new_with_byte_offset_and_length`], which is
+    /// `new Uint8Array(buffer, offset, length)` — is an ordinary zero-copy
+    /// JavaScript view onto its `ArrayBuffer`, exactly as on the web.
     ///
     /// Writes never go through a data pointer: [`Uint8Array::set`] calls JavaScript's
     /// own `TypedArray.prototype.set`. A pointer obtained for a buffer that does not

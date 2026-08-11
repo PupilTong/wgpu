@@ -52,16 +52,12 @@ webgpu_members! {
     getter adapter_info() -> GpuAdapterInfo as "adapterInfo";
     /// Getter for the `features` field of this object.
     getter features() -> GpuSupportedFeatures as "features";
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
     /// Getter for the `limits` field of this object.
     getter limits() -> GpuSupportedLimits as "limits";
     /// Getter for the `lost` field of this object.
     getter lost() -> crate::Promise<GpuDeviceLostInfo> as "lost";
     /// Getter for the `queue` field of this object.
     getter queue() -> GpuQueue as "queue";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// Setter for the `onuncapturederror` field of this object.
     setter set_onuncapturederror(value: Option<&crate::JsValue>) as "onuncapturederror";
     /// The `createBindGroup()` method.
@@ -174,10 +170,6 @@ js_type! {
 
 webgpu_members! {
     GpuQueue;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `copyExternalImageToTexture()` method.
     method copy_external_image_to_texture_with_gpu_extent_3d_dict(
         source: &GpuCopyExternalImageSourceInfo,

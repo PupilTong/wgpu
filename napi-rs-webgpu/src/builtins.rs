@@ -103,25 +103,10 @@ where
         Self::from(value.into())
     }
 
-    /// A slot holding `option`'s value, if it has one.
-    #[must_use]
-    pub fn from_option(option: Option<T>) -> Self {
-        match option {
-            Some(value) => Self::wrap(value),
-            None => Self::new(),
-        }
-    }
-
     /// Whether the slot is empty.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.js().is_undefined()
-    }
-
-    /// The value, cloned out of the slot.
-    #[must_use]
-    pub fn as_option(&self) -> Option<T> {
-        (!self.is_empty()).then(|| T::unchecked_from_js(self.js().clone()))
     }
 
     /// The value, taken out of the slot.
@@ -231,15 +216,6 @@ impl<T: FromJs> Iterator for JsIter<T> {
 pub struct Reflect;
 
 impl Reflect {
-    /// `target[key]`.
-    ///
-    /// # Errors
-    ///
-    /// If the read throws — a proxy trap, or a getter that raises.
-    pub fn get(target: &JsValue, key: &JsValue) -> Result<JsValue, JsValue> {
-        rt::get_value(target, key)
-    }
-
     /// `target[key] = value`.
     ///
     /// Answers `true` when the write took effect, matching JavaScript's
@@ -255,16 +231,6 @@ impl Reflect {
     }
 }
 
-/// `globalThis`.
-///
-/// `js_sys::global()` is how `wgpu` decides whether it is running on a browser's
-/// main thread or in a dedicated worker, by looking for the `Window` and
-/// `WorkerGlobalScope` constructors on it.
-#[must_use]
-pub fn global() -> Object {
-    Object::from(rt::unwrap_js(rt::global_this(), "globalThis"))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -273,7 +239,6 @@ mod tests {
     fn an_empty_slot_is_undefined() {
         let empty = JsOption::<JsString>::new();
         assert!(empty.is_empty());
-        assert!(empty.as_option().is_none());
         assert!(empty.into_option().is_none());
     }
 
@@ -288,9 +253,12 @@ mod tests {
     }
 
     #[test]
-    fn from_option_maps_both_cases() {
-        assert!(JsOption::<Number>::from_option(None).is_empty());
-        let filled = JsOption::from_option(Some(Number::from(JsValue::from_f64(4.0))));
-        assert!(!filled.is_empty());
+    fn wrapping_and_taking_round_trips() {
+        let slot = JsOption::wrap(Number::from(JsValue::from_f64(4.0)));
+        assert!(!slot.is_empty());
+        assert_eq!(
+            slot.into_option().and_then(|value| value.as_f64()),
+            Some(4.0)
+        );
     }
 }

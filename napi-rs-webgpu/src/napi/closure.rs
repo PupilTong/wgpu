@@ -65,11 +65,6 @@ impl<T: ?Sized> ScopedClosure<'_, T> {
         &self.function
     }
 
-    /// Takes the JavaScript function, giving up the Rust handle.
-    pub fn into_js_value(self) -> JsValue {
-        self.function
-    }
-
     /// Kept for parity with wasm-bindgen, where it leaks the closure so JavaScript
     /// can keep calling it. Here the JS function already owns its Rust state, so
     /// there is nothing to leak: this only drops the Rust-side handle.

@@ -14,28 +14,12 @@ js_type! {
     instanceof(value) { crate::napi::rt::instance_of(value, c"GPUBindGroup") },
 }
 
-webgpu_members! {
-    GpuBindGroup;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
-}
-
 js_type! {
     /// The `GPUBindGroupLayout` interface.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUBindGroupLayout)
     GpuBindGroupLayout: [crate::Object, crate::JsValue],
     instanceof(value) { crate::napi::rt::instance_of(value, c"GPUBindGroupLayout") },
-}
-
-webgpu_members! {
-    GpuBindGroupLayout;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
 }
 
 js_type! {
@@ -48,18 +32,12 @@ js_type! {
 
 webgpu_members! {
     GpuBuffer;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
     /// Getter for the `size` field of this object.
     getter size() -> f64 as "size";
     /// Getter for the `usage` field of this object.
     getter usage() -> u32 as "usage";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `destroy()` method.
     method destroy() as "destroy";
-    /// The `getMappedRange()` method.
-    method get_mapped_range() -> crate::ArrayBuffer as "getMappedRange" catch;
     /// The `getMappedRange()` method.
     method get_mapped_range_with_f64_and_f64(
         offset: f64,
@@ -76,35 +54,11 @@ webgpu_members! {
 }
 
 js_type! {
-    /// The `GPUExternalTexture` interface.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUExternalTexture)
-    GpuExternalTexture: [crate::Object, crate::JsValue],
-    instanceof(value) { crate::napi::rt::instance_of(value, c"GPUExternalTexture") },
-}
-
-webgpu_members! {
-    GpuExternalTexture;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
-}
-
-js_type! {
     /// The `GPUSampler` interface.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUSampler)
     GpuSampler: [crate::Object, crate::JsValue],
     instanceof(value) { crate::napi::rt::instance_of(value, c"GPUSampler") },
-}
-
-webgpu_members! {
-    GpuSampler;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
 }
 
 js_type! {
@@ -117,12 +71,6 @@ js_type! {
 
 webgpu_members! {
     GpuTexture;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Getter for the `usage` field of this object.
-    getter usage() -> u32 as "usage";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `createView()` method.
     method create_view_with_descriptor(
         descriptor: &GpuTextureViewDescriptor,
@@ -137,12 +85,4 @@ js_type! {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUTextureView)
     GpuTextureView: [crate::Object, crate::JsValue],
     instanceof(value) { crate::napi::rt::instance_of(value, c"GPUTextureView") },
-}
-
-webgpu_members! {
-    GpuTextureView;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
 }

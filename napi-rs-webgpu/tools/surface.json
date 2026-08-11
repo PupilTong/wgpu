@@ -194,7 +194,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -208,7 +208,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -625,7 +625,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -639,7 +639,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -1297,7 +1297,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -1311,7 +1311,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "destroy",
@@ -1329,7 +1329,7 @@
           "catch": true,
           "args": [],
           "ret": "Result<::js_sys::ArrayBuffer, JsValue>",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_mapped_range_with_u32",
@@ -1664,7 +1664,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_offset",
@@ -2065,7 +2065,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_usage",
@@ -2088,7 +2088,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -2268,7 +2268,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_tone_mapping",
@@ -2745,7 +2745,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_write_mask",
@@ -2786,7 +2786,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -2800,7 +2800,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -2887,7 +2887,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "begin_compute_pass",
@@ -3904,7 +3904,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -3918,7 +3918,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "dispatch_workgroups",
@@ -4380,7 +4380,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -4394,7 +4394,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_bind_group_layout",
@@ -4777,7 +4777,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_premultiplied_alpha",
@@ -5417,7 +5417,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_stencil_back",
@@ -5596,7 +5596,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -5610,7 +5610,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "create_bind_group",
@@ -6229,7 +6229,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -6247,7 +6247,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -6261,10 +6261,10 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
-      "used": true
+      "used": false
     },
     "GpuExternalTextureBindingLayout": {
       "js_class": "GPUExternalTextureBindingLayout",
@@ -6367,7 +6367,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_source",
@@ -6407,7 +6407,7 @@
           "used": false
         }
       ],
-      "used": true
+      "used": false
     },
     "GpuFragmentState": {
       "js_class": "GPUFragmentState",
@@ -6787,10 +6787,10 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
-      "used": true
+      "used": false
     },
     "GpuOrigin2dDict": {
       "js_class": "GPUOrigin2DDict",
@@ -7120,7 +7120,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_layout",
@@ -7160,7 +7160,7 @@
           "used": false
         }
       ],
-      "used": true
+      "used": false
     },
     "GpuPipelineLayout": {
       "js_class": "GPUPipelineLayout",
@@ -7175,7 +7175,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -7189,7 +7189,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -7641,7 +7641,7 @@
           "catch": false,
           "args": [],
           "ret": "GpuQueryType",
-          "used": true
+          "used": false
         },
         {
           "rust": "count",
@@ -7659,7 +7659,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -7673,7 +7673,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "destroy",
@@ -7797,7 +7797,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_type",
@@ -7820,7 +7820,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -7838,7 +7838,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -7852,7 +7852,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "copy_external_image_to_texture_with_u32_sequence",
@@ -9294,10 +9294,10 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
-      "used": true
+      "used": false
     },
     "GpuRenderBundle": {
       "js_class": "GPURenderBundle",
@@ -9312,7 +9312,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -9326,7 +9326,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -9399,7 +9399,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -9413,7 +9413,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "finish",
@@ -9610,7 +9610,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "pop_debug_group",
@@ -9619,7 +9619,7 @@
           "catch": false,
           "args": [],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "push_debug_group",
@@ -9633,7 +9633,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "draw",
@@ -11464,7 +11464,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -11478,7 +11478,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "begin_occlusion_query",
@@ -12583,7 +12583,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -12597,7 +12597,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_bind_group_layout",
@@ -13113,7 +13113,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -13127,7 +13127,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -13625,7 +13625,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -13639,7 +13639,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_compilation_info",
@@ -13722,7 +13722,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_layout",
@@ -13762,7 +13762,7 @@
           "used": false
         }
       ],
-      "used": true
+      "used": false
     },
     "GpuShaderModuleDescriptor": {
       "js_class": "GPUShaderModuleDescriptor",
@@ -14170,7 +14170,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_view_dimension",
@@ -14211,7 +14211,7 @@
           "catch": false,
           "args": [],
           "ret": "u32",
-          "used": true
+          "used": false
         },
         {
           "rust": "for_each",
@@ -14225,7 +14225,7 @@
             }
           ],
           "ret": "::js_sys::Undefined>, ) -> Result<(), JsValue>",
-          "used": true
+          "used": false
         },
         {
           "rust": "has",
@@ -14257,7 +14257,7 @@
           "catch": false,
           "args": [],
           "ret": "::js_sys::Iterator<::js_sys::JsString>",
-          "used": true
+          "used": false
         },
         {
           "rust": "values",
@@ -14775,7 +14775,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -15103,7 +15103,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -15184,7 +15184,7 @@
           "catch": false,
           "args": [],
           "ret": "u32",
-          "used": true
+          "used": false
         },
         {
           "rust": "texture_binding_view_dimension",
@@ -15202,7 +15202,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -15216,7 +15216,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "create_view",
@@ -15625,7 +15625,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_mip_level_count",
@@ -15754,7 +15754,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_view_formats",
@@ -15795,7 +15795,7 @@
           "catch": false,
           "args": [],
           "ret": "::alloc::string::String",
-          "used": true
+          "used": false
         },
         {
           "rust": "set_label",
@@ -15809,7 +15809,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         }
       ],
       "used": true
@@ -16547,7 +16547,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_offset",
@@ -16584,7 +16584,7 @@
             }
           ],
           "ret": "()",
-          "used": true
+          "used": false
         },
         {
           "rust": "get_shader_location",
@@ -16966,7 +16966,7 @@
           "catch": false,
           "args": [],
           "ret": "u32",
-          "used": true
+          "used": false
         },
         {
           "rust": "for_each",
@@ -16980,7 +16980,7 @@
             }
           ],
           "ret": "::js_sys::Undefined>, ) -> Result<(), JsValue>",
-          "used": true
+          "used": false
         },
         {
           "rust": "has",
@@ -16994,7 +16994,7 @@
             }
           ],
           "ret": "bool",
-          "used": true
+          "used": false
         },
         {
           "rust": "entries",

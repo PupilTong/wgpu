@@ -42,8 +42,6 @@ webgpu_dictionary! {
     setter set_origin_gpu_origin_3d_dict(val: &GpuOrigin3dDict) as "origin";
     /// Change the `premultipliedAlpha` field of this object.
     setter set_premultiplied_alpha(val: bool) as "premultipliedAlpha";
-    /// Change the `texture` field of this object.
-    setter set_texture(val: &GpuTexture) as "texture";
 }
 
 js_type! {
@@ -94,8 +92,6 @@ webgpu_dictionary! {
     setter set_depth_or_array_layers(val: u32) as "depthOrArrayLayers";
     /// Change the `height` field of this object.
     setter set_height(val: u32) as "height";
-    /// Change the `width` field of this object.
-    setter set_width(val: u32) as "width";
 }
 
 js_type! {
@@ -155,8 +151,6 @@ webgpu_dictionary! {
     GpuTexelCopyBufferInfo;
     /// Construct a new `GpuTexelCopyBufferInfo`.
     new new(buffer: &GpuBuffer as "buffer");
-    /// Change the `buffer` field of this object.
-    setter set_buffer(val: &GpuBuffer) as "buffer";
     /// Change the `bytesPerRow` field of this object.
     setter set_bytes_per_row(val: u32) as "bytesPerRow";
     /// Change the `offset` field of this object.
@@ -207,6 +201,4 @@ webgpu_dictionary! {
     setter set_mip_level(val: u32) as "mipLevel";
     /// Change the `origin` field of this object.
     setter set_origin_gpu_origin_3d_dict(val: &GpuOrigin3dDict) as "origin";
-    /// Change the `texture` field of this object.
-    setter set_texture(val: &GpuTexture) as "texture";
 }

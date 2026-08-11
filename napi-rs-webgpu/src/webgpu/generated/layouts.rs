@@ -73,8 +73,6 @@ webgpu_dictionary! {
     GpuBufferBinding;
     /// Construct a new `GpuBufferBinding`.
     new new(buffer: &GpuBuffer as "buffer");
-    /// Change the `buffer` field of this object.
-    setter set_buffer(val: &GpuBuffer) as "buffer";
     /// Change the `offset` field of this object.
     setter set_offset_f64(val: f64) as "offset";
     /// Change the `size` field of this object.
@@ -155,8 +153,6 @@ webgpu_dictionary! {
     new new(format: GpuTextureFormat as "format");
     /// Change the `access` field of this object.
     setter set_access(val: GpuStorageTextureAccess) as "access";
-    /// Change the `format` field of this object.
-    setter set_format(val: GpuTextureFormat) as "format";
     /// Change the `viewDimension` field of this object.
     setter set_view_dimension(val: GpuTextureViewDimension) as "viewDimension";
 }
@@ -201,10 +197,6 @@ webgpu_dictionary! {
         offset: f64 as "offset",
         shader_location: u32 as "shaderLocation",
     );
-    /// Change the `format` field of this object.
-    setter set_format(val: GpuVertexFormat) as "format";
-    /// Change the `offset` field of this object.
-    setter set_offset_f64(val: f64) as "offset";
 }
 
 js_type! {

@@ -67,8 +67,6 @@ webgpu_dictionary! {
     new new(format: GpuTextureFormat as "format");
     /// Change the `blend` field of this object.
     setter set_blend(val: &GpuBlendState) as "blend";
-    /// Change the `format` field of this object.
-    setter set_format(val: GpuTextureFormat) as "format";
     /// Change the `writeMask` field of this object.
     setter set_write_mask(val: u32) as "writeMask";
 }
@@ -96,8 +94,6 @@ webgpu_dictionary! {
     setter set_depth_compare(val: GpuCompareFunction) as "depthCompare";
     /// Change the `depthWriteEnabled` field of this object.
     setter set_depth_write_enabled(val: bool) as "depthWriteEnabled";
-    /// Change the `format` field of this object.
-    setter set_format(val: GpuTextureFormat) as "format";
     /// Change the `stencilBack` field of this object.
     setter set_stencil_back(val: &GpuStencilFaceState) as "stencilBack";
     /// Change the `stencilFront` field of this object.

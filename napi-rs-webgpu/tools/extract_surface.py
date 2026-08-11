@@ -8,9 +8,15 @@ whether it can throw, and the Rust signature web-sys chose for it. Reading them 
 therefore more reliable than hand-typing 400 members, and it can be re-run when the
 bindings are re-vendored.
 
-`backend/webgpu.rs` is consulted too, to mark which members are actually reached.
-476 of the generated methods are never called, and the new crate has no reason to
-carry them.
+`backend/webgpu.rs` is consulted too, to mark which members look reached. That
+mark is only a first guess: it comes from grepping for `.member(`, which matches
+whatever the receiver, so common names (`width`, `size`, `label`) are marked on
+every type that declares them. `tools/shake.py` replaces the guess with what the
+compiler says, and is what should be run next:
+
+    python3 tools/extract_surface.py <gen dir> <backend.rs> tools/surface.json
+    python3 tools/shake.py
+    python3 tools/generate.py
 """
 
 from __future__ import annotations
@@ -281,7 +287,7 @@ def main(gen_dir: str, backend_path: str, out_path: str) -> int:
     )
     used_enums = {k: v for k, v in enums.items() if v["used"]}
     used_namespaces = {k: v for k, v in namespaces.items() if v["used"]}
-    print(f"interfaces      : {len(interfaces):4}  ({len(used_interfaces)} reached)")
+    print(f"interfaces      : {len(interfaces):4}  ({len(used_interfaces)} guessed reached)")
     print(
         f"members         : {sum(len(v['members']) for v in interfaces.values()):4}"
         f"  ({used_members} reached)"

@@ -50,27 +50,6 @@ pub fn set(target: &JsValue, name: &CStr, value: &JsValue) -> Result<(), JsValue
     })
 }
 
-/// Reads `target[key]`, where the key is a value rather than a literal.
-///
-/// The `*_named_property` pair above covers every name a declaration knows at
-/// compile time; this is for the two places `wgpu` builds the key at run time —
-/// the pipeline `constants` map and the limits object.
-pub fn get_value(target: &JsValue, key: &JsValue) -> Result<JsValue, JsValue> {
-    env::scope(|env| {
-        // SAFETY: inside a handle scope on `env`.
-        unsafe {
-            let object = target.to_napi(env)?;
-            let key = key.to_napi(env)?;
-            let mut out = ptr::null_mut();
-            env::check(
-                sys::napi_get_property(env, object, key, &mut out),
-                "napi_get_property",
-            )?;
-            Ok(JsValue::from_napi(env, out))
-        }
-    })
-}
-
 /// Writes `target[key] = value`, where the key is a value rather than a literal.
 pub fn set_value(target: &JsValue, key: &JsValue, value: &JsValue) -> Result<(), JsValue> {
     env::scope(|env| {
@@ -173,18 +152,6 @@ pub fn global(name: &CStr) -> Result<JsValue, JsValue> {
         unsafe {
             let value = global_property(env, name)?;
             Ok(JsValue::from_napi(env, value))
-        }
-    })
-}
-
-/// `globalThis` itself.
-pub fn global_this() -> Result<JsValue, JsValue> {
-    env::scope(|env| {
-        let mut global = ptr::null_mut();
-        // SAFETY: inside a handle scope on `env`.
-        unsafe {
-            env::check(sys::napi_get_global(env, &mut global), "napi_get_global")?;
-            Ok(JsValue::from_napi(env, global))
         }
     })
 }

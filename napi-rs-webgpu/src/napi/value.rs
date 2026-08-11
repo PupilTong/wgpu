@@ -200,11 +200,6 @@ impl JsValue {
         self.type_of() == Some(sys::ValueType::napi_function)
     }
 
-    /// Whether this is a symbol.
-    pub fn is_symbol(&self) -> bool {
-        self.type_of() == Some(sys::ValueType::napi_symbol)
-    }
-
     /// Whether this value is truthy by JavaScript's rules.
     pub fn is_truthy(&self) -> bool {
         match &self.0 {
@@ -214,12 +209,6 @@ impl JsValue {
             Repr::Str(value) => !value.is_empty(),
             Repr::Handle(_) => true,
         }
-    }
-
-    /// Whether this value is falsy by JavaScript's rules.
-    #[inline]
-    pub fn is_falsy(&self) -> bool {
-        !self.is_truthy()
     }
 
     /// The string contents, if this is a string.
@@ -683,11 +672,6 @@ where
     /// Casts to `&T` without checking.
     fn unchecked_ref<T: JsCast>(&self) -> &T {
         T::unchecked_from_js_ref(self.as_ref())
-    }
-
-    /// Whether this value is an instance of `T`, by `instanceof`.
-    fn is_instance_of<T: JsCast>(&self) -> bool {
-        T::instanceof(self.as_ref())
     }
 }
 

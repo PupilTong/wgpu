@@ -53,10 +53,6 @@ js_type! {
 
 webgpu_members! {
     GpuComputePipeline;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `getBindGroupLayout()` method.
     method get_bind_group_layout(index: u32) -> GpuBindGroupLayout as "getBindGroupLayout";
 }
@@ -69,14 +65,6 @@ js_type! {
     instanceof(value) { crate::napi::rt::instance_of(value, c"GPUPipelineLayout") },
 }
 
-webgpu_members! {
-    GpuPipelineLayout;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
-}
-
 js_type! {
     /// The `GPURenderPipeline` interface.
     ///
@@ -87,10 +75,6 @@ js_type! {
 
 webgpu_members! {
     GpuRenderPipeline;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `getBindGroupLayout()` method.
     method get_bind_group_layout(index: u32) -> GpuBindGroupLayout as "getBindGroupLayout";
 }
@@ -105,10 +89,6 @@ js_type! {
 
 webgpu_members! {
     GpuShaderModule;
-    /// Getter for the `label` field of this object.
-    getter label() -> alloc::string::String as "label";
-    /// Setter for the `label` field of this object.
-    setter set_label(value: &str) as "label";
     /// The `getCompilationInfo()` method.
     method get_compilation_info() -> crate::Promise<GpuCompilationInfo> as "getCompilationInfo";
 }
