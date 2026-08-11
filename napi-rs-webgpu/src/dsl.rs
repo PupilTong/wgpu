@@ -829,6 +829,24 @@ fn unwrap_named<T>(result: Result<T, JsValue>, operation: &dyn OperationName) ->
     }
 }
 
+/// `Default` for a dictionary whose constructor takes no arguments.
+///
+/// 20 of the 64 WebGPU dictionary constructors take nothing, which makes them
+/// default values in the ordinary sense. `webgpu_members!` cannot emit this itself:
+/// its members expand inside an `impl` block, and a trait impl cannot nest there.
+/// `tools/generate.py` emits a call to this next to each such dictionary.
+#[macro_export]
+macro_rules! webgpu_default {
+    ($name:ident, $constructor:ident) => {
+        impl ::core::default::Default for $name {
+            #[inline]
+            fn default() -> Self {
+                Self::$constructor()
+            }
+        }
+    };
+}
+
 /// The parts of the machinery that are decided in Rust, and so can be checked
 /// without a JavaScript engine to run against.
 #[cfg(test)]
@@ -876,22 +894,4 @@ mod tests {
             b"createBuffer"
         );
     }
-}
-
-/// `Default` for a dictionary whose constructor takes no arguments.
-///
-/// 20 of the 64 WebGPU dictionary constructors take nothing, which makes them
-/// default values in the ordinary sense. `webgpu_members!` cannot emit this itself:
-/// its members expand inside an `impl` block, and a trait impl cannot nest there.
-/// `tools/generate.py` emits a call to this next to each such dictionary.
-#[macro_export]
-macro_rules! webgpu_default {
-    ($name:ident, $constructor:ident) => {
-        impl ::core::default::Default for $name {
-            #[inline]
-            fn default() -> Self {
-                Self::$constructor()
-            }
-        }
-    };
 }
