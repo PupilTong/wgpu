@@ -1,10 +1,9 @@
 //! `ArrayBuffer` and the typed array views over it.
 //!
-//! Typed arrays are the only place where the Node-API route is not a faithful
-//! stand-in for wasm-bindgen, because they are the only place where JavaScript is
-//! handed *bytes* rather than a reference. [`Uint8Array`]'s own documentation is
-//! where that difference is spelled out, since a private module's documentation is
-//! not part of the published API.
+//! On Wasm, Emnapi's memory-view extension gives [`Uint8Array::view`] the same
+//! zero-copy contract as wasm-bindgen: JavaScript sees a temporary view directly
+//! over this module's linear memory. `Uint8Array::from` remains the explicitly
+//! owned-copy route.
 
 use alloc::vec::Vec;
 use core::ptr;
@@ -16,6 +15,80 @@ use crate::napi::rt;
 use crate::napi::value::JsValue;
 
 use super::Object;
+
+#[cfg(target_family = "wasm")]
+#[link(wasm_import_module = "emnapi")]
+unsafe extern "C" {
+    /// Creates a JavaScript typed-array view directly over this module's linear
+    /// memory. This extension is part of Emnapi 1.x as well as 2.x.
+    fn emnapi_create_memory_view(
+        env: sys::napi_env,
+        view_type: EmnapiMemoryViewType,
+        external_data: *mut core::ffi::c_void,
+        byte_length: usize,
+        finalize_cb: sys::napi_finalize,
+        finalize_hint: *mut core::ffi::c_void,
+        result: *mut sys::napi_value,
+    ) -> sys::napi_status;
+}
+
+/// The C ABI represents `emnapi_memory_view_type` as an `int` on Wasm.
+#[cfg(target_family = "wasm")]
+type EmnapiMemoryViewType = core::ffi::c_int;
+
+// Keep this separate from Node-API's `napi_typedarray_type`: the two enums
+// currently assign the same value, but they are different public ABIs. This is
+// `emnapi_uint8_array` in Emnapi 1.x's `emnapi.h`.
+#[cfg(target_family = "wasm")]
+const EMNAPI_UINT8_ARRAY: EmnapiMemoryViewType = 1;
+
+/// Creates a `Uint8Array` view over live bytes in this module's linear memory.
+///
+/// # Safety
+///
+/// `data..data + byte_length` must remain live for every JavaScript access to the
+/// returned value. The caller must also uphold the aliasing and memory-growth
+/// requirements documented on the typed array's `view` method.
+#[cfg(target_family = "wasm")]
+unsafe fn create_uint8_memory_view(
+    data: *const core::ffi::c_void,
+    byte_length: usize,
+) -> Result<JsValue, JsValue> {
+    env::scope(|env| {
+        // A zero-length Rust slice may carry a dangling but non-null pointer.
+        // Emnapi treats null as the canonical empty view and never dereferences it.
+        let external_data = if byte_length == 0 {
+            ptr::null_mut()
+        } else {
+            data.cast_mut()
+        };
+        let mut value = ptr::null_mut();
+        // SAFETY: the caller guarantees that the non-empty byte range is live in
+        // this module's linear memory. `None` is intentional: Rust owns the bytes,
+        // so JavaScript must neither free nor finalize them. All other pointers are
+        // valid out-pointers or null as required by Emnapi's C ABI.
+        unsafe {
+            env::check(
+                emnapi_create_memory_view(
+                    env,
+                    EMNAPI_UINT8_ARRAY,
+                    external_data,
+                    byte_length,
+                    None,
+                    ptr::null_mut(),
+                    &mut value,
+                ),
+                "emnapi_create_memory_view",
+            )?;
+            if value.is_null() {
+                return Err(JsValue::from_str(
+                    "napi-rs-webgpu: emnapi_create_memory_view returned a null value",
+                ));
+            }
+            Ok(JsValue::from_napi(env, value))
+        }
+    })
+}
 
 js_type! {
     /// The JavaScript `ArrayBuffer`.
@@ -137,21 +210,6 @@ macro_rules! typed_array {
                 );
             }
 
-            /// A JavaScript typed array holding a **copy** of `rust`.
-            ///
-            /// Unlike wasm-bindgen's, this is not a window onto wasm memory; see
-            /// [`Uint8Array`].
-            ///
-            /// # Safety
-            ///
-            /// None. `js-sys` declares this `unsafe` because its result aliases wasm
-            /// memory, and the signature is kept so that callers written against
-            /// `js-sys` compile unchanged; this implementation copies, so there is
-            /// nothing for a caller to uphold.
-            pub unsafe fn view(rust: &[$element]) -> Self {
-                Self::from_slice(rust)
-            }
-
             /// A JavaScript typed array holding a copy of `slice`.
             fn from_slice(slice: &[$element]) -> Self {
                 let byte_length = core::mem::size_of_val(slice);
@@ -263,26 +321,18 @@ typed_array! {
     ///
     /// # Copy semantics
     ///
-    /// wasm-bindgen's [`Uint8Array::view`] hands JavaScript a **window onto wasm
-    /// linear memory**: its glue holds the module's `WebAssembly.Memory`, so it can
-    /// construct `new Uint8Array(memory.buffer, ptr, len)` and no bytes move. Writes
-    /// through that view land in the Rust slice, which is why its safety contract is
-    /// about the memory being resized underneath it.
+    /// On Wasm, [`Uint8Array::view`] calls Emnapi's
+    /// `emnapi_create_memory_view`, which constructs the equivalent of
+    /// `new Uint8Array(memory.buffer, ptr, len)`. No bytes move: JavaScript reads
+    /// directly from the Rust slice. Its `unsafe` contract therefore matches the
+    /// wasm-bindgen API it stands in for.
     ///
-    /// Node-API has no such handle. Its only way to put bytes into a typed array is
-    /// `napi_create_arraybuffer`, which allocates a *new* backing store and reports a
-    /// pointer to it. So [`Uint8Array::view`] here **copies**: the result is a
-    /// snapshot of the slice, disconnected from Rust memory. The `unsafe` signature is
-    /// kept so callers written against `js-sys` compile unchanged, but this
-    /// implementation has no safety requirement and the aliasing hazard the
-    /// wasm-bindgen version warns about does not exist. `wgpu`'s one caller
-    /// immediately does `actual_mapping.set(&view, 0)`, which still ends with the
-    /// right bytes in the right place, at the cost of one extra copy.
+    /// `Uint8Array::from(slice)` remains the separate owned-copy path.
     ///
-    /// Reading is the mirror image: [`Uint8Array::to_vec`] asks
+    /// Reading a JavaScript-owned view still copies: [`Uint8Array::to_vec`] asks
     /// `napi_get_typedarray_info` for the element pointer and copies out of it.
     ///
-    /// Only the Rust⇄JavaScript crossing copies. A view *created in JavaScript* —
+    /// A view *created in JavaScript* —
     /// [`Uint8Array::new_with_byte_offset_and_length`], which is
     /// `new Uint8Array(buffer, offset, length)` — is an ordinary zero-copy
     /// JavaScript view onto its `ArrayBuffer`, exactly as on the web.
@@ -295,6 +345,40 @@ typed_array! {
     Uint8Array(u8, c"Uint8Array", sys::TypedarrayType::uint8_array)
 }
 
+impl Uint8Array {
+    /// A JavaScript `Uint8Array` viewing `rust` without copying on Wasm.
+    ///
+    /// # Safety
+    ///
+    /// On Wasm, the returned object aliases the slice but is disconnected from
+    /// its lifetime. The slice must remain live and unmodified for all JavaScript
+    /// reads; JavaScript must not mutate the view while Rust assumes a shared
+    /// reference, and the view must not outlive a memory resize that invalidates
+    /// its backing buffer.
+    ///
+    /// The non-Wasm compile-time fallback copies because there is no Wasm linear
+    /// memory to view.
+    pub unsafe fn view(rust: &[u8]) -> Self {
+        #[cfg(target_family = "wasm")]
+        {
+            let created = unsafe {
+                create_uint8_memory_view(
+                    rust.as_ptr().cast::<core::ffi::c_void>(),
+                    core::mem::size_of_val(rust),
+                )
+            };
+            rt::cast(rt::unwrap_js(
+                created,
+                "creating a zero-copy JavaScript Uint8Array",
+            ))
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            Self::from_slice(rust)
+        }
+    }
+}
+
 typed_array! {
     /// The JavaScript `Uint32Array`.
     ///
@@ -302,6 +386,18 @@ typed_array! {
     /// a typed array of dynamic offsets. `wgpu` calls the `u32` slice overload
     /// instead, so nothing constructs one of these today.
     Uint32Array(u32, c"Uint32Array", sys::TypedarrayType::uint32_array)
+}
+
+impl Uint32Array {
+    /// A JavaScript `Uint32Array` holding a copy of `rust`.
+    ///
+    /// # Safety
+    ///
+    /// None. The signature matches `js-sys`, but this implementation does not
+    /// alias the Rust slice.
+    pub unsafe fn view(rust: &[u32]) -> Self {
+        Self::from_slice(rust)
+    }
 }
 
 /// Whether `value` is a typed array of `kind`.

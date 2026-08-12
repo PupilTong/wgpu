@@ -17,6 +17,12 @@
 //! member is the property read, property write, method call or construction that
 //! WebGPU's IDL says it is.
 //!
+//! Rust byte slices passed to WebGPU use Emnapi's `emnapi_create_memory_view`
+//! extension: JavaScript receives a short-lived typed-array view directly over
+//! Wasm linear memory, rather than an ArrayBuffer staging copy. The extension is
+//! available in both Emnapi 1.x and 2.x; the acceptance harness exercises it
+//! against 1.11.3.
+//!
 //! There is no wasm-bindgen, `js-sys` or `web-sys` here, and nothing here imitates
 //! them.
 //!

@@ -450,6 +450,12 @@ class Types:
             if head == "js_sys::Array":
                 return f"&[{self.value(args[0])}]"
             if inner.startswith("[") and inner.endswith("]"):
+                # WebGPU's BufferSource arguments must be ArrayBuffer views, not
+                # ordinary JavaScript sequences. Keep Uint8Array explicit so the
+                # WASI caller can pass either an owned array or a short-lived view
+                # over Wasm memory without changing the generated method surface.
+                if normalize(inner[1:-1]) == "u8":
+                    return "&crate::Uint8Array"
                 return f"&[{self.value(inner[1:-1])}]"
             return f"&{self.value(inner)}"
         head, args = parse_generic(text)

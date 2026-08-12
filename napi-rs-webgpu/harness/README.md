@@ -38,6 +38,9 @@ and no nightly. The target ships with the pinned toolchain.
 
 A 64×64 `Rgba8Unorm` texture, cleared to `#112233ff`, with a triangle covering the
 lower-left half drawn in `#339966ff`, copied to a buffer and mapped for reading.
+The triangle colour is uploaded through `queue.writeBuffer`, so the run also
+checks that WebGPU accepts the temporary `Uint8Array` view over the shared Wasm
+memory directly, without a Rust-to-JavaScript staging copy.
 64 pixels of RGBA is exactly 256 bytes, which is `COPY_BYTES_PER_ROW_ALIGNMENT`,
 so the readback needs no row padding and the mapped bytes are the image.
 
@@ -57,7 +60,8 @@ Between them these exercise the parts of the binding that a `cargo check` cannot
 event loop, `createShaderModule` with WGSL, `createRenderPipeline` with its
 `sequence<GPUColorTargetState?>`, `beginRenderPass` with its
 `sequence<GPURenderPassColorAttachment?>` — the nullable sequences that
-`JsOption<T>` exists for — `copyTextureToBuffer`, and `mapAsync`, whose callback
+`JsOption<T>` exists for — `queue.writeBuffer` from an Emnapi shared-memory
+view, `copyTextureToBuffer`, and `mapAsync`, whose callback
 arrives from a `then` job rather than from `device.poll`, which is a no-op on this
 backend.
 
