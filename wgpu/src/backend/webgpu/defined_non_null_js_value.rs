@@ -1,9 +1,9 @@
 use core::ops::{Deref, DerefMut};
 
-#[cfg(web_bindgen)]
+#[cfg(not(wasi))]
 use wasm_bindgen::JsValue;
 
-#[cfg(web_napi)]
+#[cfg(wasi)]
 use napi_rs_webgpu::JsValue;
 
 /// Derefs to a [`JsValue`] that's known not to be `undefined` or `null`.

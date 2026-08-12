@@ -2,9 +2,9 @@ use crate::{Adapter, Instance, RequestAdapterOptions, Surface};
 
 #[cfg(doc)]
 use crate::Backends;
-#[cfg(all(webgpu, web_napi))]
+#[cfg(all(webgpu, wasi))]
 use napi_rs_webgpu::futures::JsFuture;
-#[cfg(all(webgpu, web_bindgen))]
+#[cfg(all(webgpu, not(wasi)))]
 use wasm_bindgen_futures::JsFuture;
 
 /// Initialize the adapter obeying the `WGPU_ADAPTER_NAME` environment variable.

@@ -24,9 +24,9 @@ use smallvec::SmallVec;
 // cannot answer and which exists because the WebGPU backend can. Which crate the
 // type comes from is decided by the target, as everywhere else `wgpu` names a
 // JavaScript type.
-#[cfg(all(webgpu, web_bindgen))]
+#[cfg(all(webgpu, not(wasi)))]
 use js_sys::Uint8Array;
-#[cfg(all(webgpu, web_napi))]
+#[cfg(all(webgpu, wasi))]
 use napi_rs_webgpu::Uint8Array;
 use wgc::{
     error::ContextErrorSource, pipeline::CreateShaderModuleError,

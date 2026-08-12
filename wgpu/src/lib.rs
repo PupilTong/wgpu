@@ -268,7 +268,7 @@ pub mod util;
 // feature, so the feature would silently mark thread-affine Node-API handles as
 // shareable. A Node-API value belongs to the `napi_env` of one thread, so this is
 // refused rather than left to fail at runtime.
-#[cfg(all(web_napi, send_sync))]
+#[cfg(all(web, wasi, send_sync))]
 compile_error!(
     "wgpu: `fragile-send-sync-non-atomic-wasm` cannot be combined with the `web` \
      feature on `wasm32-wasip1(-threads)` — JavaScript is reached there over \
@@ -344,7 +344,7 @@ pub use naga;
 pub use raw_window_handle as rwh;
 
 /// Re-export of our `web-sys` dependency.
-#[cfg(web_bindgen)]
+#[cfg(all(web, not(wasi)))]
 pub use web_sys;
 
 /// Re-export of our `napi-rs-webgpu` dependency, which is what the
@@ -354,7 +354,7 @@ pub use web_sys;
 /// It takes `web-sys`' place there: the DOM and WebGPU objects it declares are the
 /// same JavaScript objects, reached over Node-API rather than through
 /// wasm-bindgen's glue, which does not exist for WASI.
-#[cfg(web_napi)]
+#[cfg(all(web, wasi))]
 pub use napi_rs_webgpu;
 
 /// Vendored WebGPU JS-handle types used by the WebGPU backend.

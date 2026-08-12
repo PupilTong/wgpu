@@ -7,9 +7,9 @@ use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 
 use crate::util::Mutex;
 use crate::*;
-#[cfg(web_napi)]
+#[cfg(all(web, wasi))]
 use napi_rs_webgpu::{HtmlCanvasElement, OffscreenCanvas};
-#[cfg(web_bindgen)]
+#[cfg(all(web, not(wasi)))]
 use web_sys::{HtmlCanvasElement, OffscreenCanvas};
 
 /// Describes a [`Surface`].

@@ -2,9 +2,9 @@ use alloc::vec::Vec;
 use core::future::Future;
 
 use crate::{dispatch::InstanceInterface, util::Mutex, *};
-#[cfg(web_napi)]
+#[cfg(all(web, wasi))]
 use napi_rs_webgpu::JsValue;
-#[cfg(web_bindgen)]
+#[cfg(all(web, not(wasi)))]
 use wasm_bindgen::JsValue;
 
 bitflags::bitflags! {
