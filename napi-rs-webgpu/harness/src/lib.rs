@@ -35,9 +35,10 @@ use std::task::{Context, Poll, Waker};
 // Imported one by one rather than through `napi::bindgen_prelude::*`, which
 // brings a `Result<T, S = Status>` alias that quietly shadows `core`'s and turns
 // every `Result<T, String>` in this file into `Result<T, napi::Error<String>>`.
+use napi::bindgen_prelude::Uint8Array as NapiUint8Array;
 use napi::{Env, Error, JsValue as _, Unknown};
 use napi_derive::napi;
-use napi_rs_webgpu::Uint8Array;
+use napi_rs_webgpu::Uint8Array as WebUint8Array;
 
 /// What this addon's own fallible steps return, kept clear of napi-rs' `Result`.
 type Outcome<T> = core::result::Result<T, String>;
@@ -130,10 +131,10 @@ pub fn start() {
 ///
 /// If the render failed, with the step that failed and why.
 #[napi]
-pub fn take_result() -> napi::Result<Option<Vec<u32>>> {
+pub fn take_result() -> napi::Result<Option<NapiUint8Array>> {
     match OUTCOME.with(|slot| slot.borrow_mut().take()) {
         None => Ok(None),
-        Some(Ok((_, pixels))) => Ok(Some(pixels.into_iter().map(u32::from).collect())),
+        Some(Ok((_, pixels))) => Ok(Some(pixels.into())),
         Some(Err(message)) => Err(Error::from_reason(message)),
     }
 }
@@ -151,15 +152,16 @@ pub fn memory_view_aliases(env: Env) -> bool {
     // SAFETY: this call owns a live `napi_env` for the current thread.
     unsafe { napi_rs_webgpu::install(env.raw()) };
 
-    // Build the owned source before exposing the alias, so no Rust allocation
-    // can grow Wasm memory between creating the view and its first JS access.
-    let source = Uint8Array::from(FROM_JS.as_slice());
+    let source_bytes = FROM_JS;
+    // SAFETY: `source_bytes` remains live and immutable through the synchronous
+    // `TypedArray.set` call below.
+    let source = unsafe { WebUint8Array::view(&source_bytes) };
     let mut backing = [0; FROM_RUST.len()];
     // SAFETY: `backing` stays live until every access through `view` is complete.
     // Rust and JavaScript touch it only in separate, synchronous steps, and this
     // threaded harness imports fixed shared memory, whose existing range remains
     // valid if the memory grows.
-    let view = unsafe { Uint8Array::view(&backing) };
+    let view = unsafe { WebUint8Array::view(&backing) };
 
     // A constructor-time copy would remain all-zero and fail this check.
     backing.copy_from_slice(&FROM_RUST);

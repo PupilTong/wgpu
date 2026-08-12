@@ -8,9 +8,7 @@ import { Worker } from "node:worker_threads";
 
 import {
   WASI,
-  createContext,
-  emnapiAsyncWorkPlugin,
-  emnapiTSFNPlugin,
+  getDefaultContext,
   instantiateNapiModule,
 } from "@napi-rs/wasm-runtime";
 
@@ -32,14 +30,11 @@ const memory = new WebAssembly.Memory({
 });
 
 export async function instantiateAddon() {
-  const context = createContext({ autoDestroy: false });
-  context.suppressDestroy();
   const wasi = new WASI({ print: console.log, printErr: console.error });
 
   try {
     const { napiModule } = await instantiateNapiModule(await readFile(WASM), {
-      context,
-      plugins: [emnapiAsyncWorkPlugin, emnapiTSFNPlugin],
+      context: getDefaultContext(),
       wasi,
       overwriteImports(imports) {
         imports.env = {

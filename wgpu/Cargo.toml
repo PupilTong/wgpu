@@ -236,6 +236,7 @@ exhaust = ["wgpu-types/exhaust"]
 naga = { workspace = true, optional = true, features = ["termcolor"] }
 wgpu-core = { workspace = true, optional = true }
 wgpu-types.workspace = true
+napi-rs-webgpu = { workspace = true, optional = true }
 
 # Needed for both wgpu-core and webgpu
 arrayvec.workspace = true
@@ -300,7 +301,7 @@ wasm-bindgen-futures = { workspace = true, optional = true }
 [target.'cfg(all(target_family = "wasm", target_os = "wasi"))'.dependencies]
 # What the `web` feature means here: WebGPU and the DOM bound over Node-API. Only
 # ever resolved for WASI targets, which is what makes `web` select by target.
-napi-rs-webgpu = { workspace = true, optional = true }
+# MUTATION-UNDER-TEST: moved to shared [dependencies] above.
 
 ##############
 # Emscripten #

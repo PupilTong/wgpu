@@ -100,7 +100,9 @@ pixel run remains a local check.
 
 ## `wasm32-wasip1` without threads
 
-The bindings also compile for plain `wasm32-wasip1`, and CI checks that target.
-This runtime harness deliberately uses `wasm32-wasip1-threads`: it covers the
-same shared-memory NAPI-RS/Emnapi route browser embedders use and keeps one
-acceptance artifact rather than duplicating the run for both targets.
+Not supported by the toolchain as it stands, and this is a limitation of emnapi
+rather than of the bindings: `napi-build` 2.4 links `libemnapi-basic-napi-rs.a`
+for a non-threaded WASI target, and emnapi 1.11.3 ships no such archive — only the
+threaded `libemnapi-napi-rs-mt.a`. `napi-build` says as much when it fails:
+"Install emnapi v2 with support for the wasm32-wasip1 archive". `napi-rs-webgpu`
+itself compiles for plain `wasm32-wasip1`, and CI checks that.
