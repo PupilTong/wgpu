@@ -17,10 +17,11 @@
 //! member is the property read, property write, method call or construction that
 //! WebGPU's IDL says it is.
 //!
-//! This binding uses Emnapi 2's `emnapi_sync_memory` pointer ABI to flush
-//! Wasm-side ArrayBuffer staging allocations before JavaScript reads them. Hosts
-//! must therefore load it with Emnapi 2.x (the acceptance harness pins
-//! `2.0.0-alpha.3`); Emnapi 1.x has an incompatible by-value ABI.
+//! Rust byte slices passed to WebGPU use Emnapi's `emnapi_create_memory_view`
+//! extension: JavaScript receives a short-lived typed-array view directly over
+//! Wasm linear memory, rather than an ArrayBuffer staging copy. The extension is
+//! available in both Emnapi 1.x and 2.x; the acceptance harness exercises it
+//! against 1.11.3.
 //!
 //! There is no wasm-bindgen, `js-sys` or `web-sys` here, and nothing here imitates
 //! them.

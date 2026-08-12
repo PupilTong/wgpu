@@ -22,10 +22,11 @@ adapter: BrowserWebGpu / Metal driver on macOS Version 26.4.1 (Build 25E253) /
 ok: 64x64 through napi-rs-webgpu — 2016 px 339966ff (triangle), 2080 px 112233ff (clear)
 ```
 
-The GPU-free synchronization regression test is `npm run test:sync`. It returns
-known Rust bytes through `napi-rs-webgpu`'s JavaScript `Uint8Array` and checks
-that Emnapi flushed its Wasm-side staging allocation. CI runs this narrower
-test; it catches the zero-byte failure without an adapter.
+The GPU-free memory-view regression test is `npm run test:view`. It creates an
+Emnapi `Uint8Array` view directly over Rust bytes in shared Wasm memory and
+checks that mutations are visible from both sides without a staging allocation
+or a synchronization copy. CI runs this narrower test without requiring an
+adapter.
 
 The build alone is `npm run build`, which is:
 
@@ -44,8 +45,8 @@ and no nightly. The target ships with the pinned toolchain.
 A 64×64 `Rgba8Unorm` texture, cleared to `#112233ff`, with a triangle covering the
 lower-left half drawn in `#339966ff`, copied to a buffer and mapped for reading.
 The triangle colour is uploaded through `queue.writeBuffer`, so the run also
-checks that Emnapi synchronizes Rust's Wasm-side staging bytes into the
-JavaScript `Uint8Array` WebGPU reads.
+checks that WebGPU accepts the temporary `Uint8Array` view over the shared Wasm
+memory directly, without a Rust-to-JavaScript staging copy.
 64 pixels of RGBA is exactly 256 bytes, which is `COPY_BYTES_PER_ROW_ALIGNMENT`,
 so the readback needs no row padding and the mapped bytes are the image.
 
@@ -65,8 +66,8 @@ Between them these exercise the parts of the binding that a `cargo check` cannot
 event loop, `createShaderModule` with WGSL, `createRenderPipeline` with its
 `sequence<GPUColorTargetState?>`, `beginRenderPass` with its
 `sequence<GPURenderPassColorAttachment?>` — the nullable sequences that
-`JsOption<T>` exists for — `queue.writeBuffer` across Emnapi's split
-Wasm/JavaScript memory, `copyTextureToBuffer`, and `mapAsync`, whose callback
+`JsOption<T>` exists for — `queue.writeBuffer` from an Emnapi shared-memory
+view, `copyTextureToBuffer`, and `mapAsync`, whose callback
 arrives from a `then` job rather than from `device.poll`, which is a no-op on this
 backend.
 
@@ -94,8 +95,8 @@ and have to be put on the global object, because the bindings recognise types wi
 
 CI runners have no GPU, and node-webgpu needs one. The build half of this is
 covered — the WASI job compiles `wgpu` for both WASI targets, asserts the
-dependency graph, and runs the GPU-free Emnapi byte round trip — but the pixel
-run remains a local check.
+dependency graph, and runs the GPU-free Emnapi memory-view alias test — but the
+pixel run remains a local check.
 
 ## `wasm32-wasip1` without threads
 

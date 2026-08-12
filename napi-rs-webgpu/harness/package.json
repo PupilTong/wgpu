@@ -7,13 +7,13 @@
   "scripts": {
     "build": "EMNAPI_LINK_DIR=\"$PWD/node_modules/emnapi/lib/wasm32-wasip1-threads\" cargo build --target wasm32-wasip1-threads --release",
     "test": "npm run build && node run.mjs",
-    "test:sync": "npm run build && node sync.mjs"
+    "test:view": "npm run build && node memory-view.mjs"
   },
   "dependencies": {
-    "@emnapi/core": "2.0.0-alpha.3",
-    "@emnapi/runtime": "2.0.0-alpha.3",
+    "@emnapi/core": "^1.11.3",
+    "@emnapi/runtime": "^1.11.3",
     "@napi-rs/wasm-runtime": "^1.2.2",
-    "emnapi": "2.0.0-alpha.3",
+    "emnapi": "^1.11.3",
     "webgpu": "0.2.0"
   }
 }

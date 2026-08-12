@@ -37,6 +37,7 @@ use std::task::{Context, Poll, Waker};
 // every `Result<T, String>` in this file into `Result<T, napi::Error<String>>`.
 use napi::{Env, Error, JsValue as _, Unknown};
 use napi_derive::napi;
+use napi_rs_webgpu::Uint8Array;
 
 /// What this addon's own fallible steps return, kept clear of napi-rs' `Result`.
 type Outcome<T> = core::result::Result<T, String>;
@@ -137,17 +138,39 @@ pub fn take_result() -> napi::Result<Option<Vec<u32>>> {
     }
 }
 
-/// Whether bytes copied from Rust through an Emnapi-backed JavaScript typed
-/// array survive the Wasm staging-memory boundary.
+/// Whether an Emnapi typed-array view aliases Rust's shared Wasm memory in both
+/// directions without an intermediate JavaScript backing store.
 ///
-/// This is deliberately independent of WebGPU, so CI can cover the
-/// `emnapi_sync_memory` path without requiring a GPU.
+/// This is deliberately independent of WebGPU, so CI can cover the memory-view
+/// bridge without requiring an adapter.
 #[napi]
-pub fn sync_roundtrip(env: Env) -> bool {
-    const EXPECTED: &[u8] = b"napi-rs-webgpu staging sync";
+pub fn memory_view_aliases(env: Env) -> bool {
+    const FROM_RUST: [u8; 8] = [0x13, 0x37, 0x42, 0x7f, 0x80, 0xa5, 0xcc, 0xfe];
+    const FROM_JS: [u8; 8] = [0xfe, 0xcc, 0xa5, 0x80, 0x7f, 0x42, 0x37, 0x13];
+
     // SAFETY: this call owns a live `napi_env` for the current thread.
     unsafe { napi_rs_webgpu::install(env.raw()) };
-    napi_rs_webgpu::Uint8Array::from(EXPECTED).to_vec() == EXPECTED
+
+    // Build the owned source before exposing the alias, so no Rust allocation
+    // can grow Wasm memory between creating the view and its first JS access.
+    let source = Uint8Array::from(FROM_JS.as_slice());
+    let mut backing = [0; FROM_RUST.len()];
+    // SAFETY: `backing` stays live until every access through `view` is complete.
+    // Rust and JavaScript touch it only in separate, synchronous steps, and this
+    // threaded harness imports fixed shared memory, whose existing range remains
+    // valid if the memory grows.
+    let view = unsafe { Uint8Array::view(&backing) };
+
+    // A constructor-time copy would remain all-zero and fail this check.
+    backing.copy_from_slice(&FROM_RUST);
+    if view.to_vec() != FROM_RUST {
+        return false;
+    }
+
+    // `TypedArray.set` writes through the JS view. Seeing the bytes in the Rust
+    // array proves the backing store is the same shared Wasm memory in reverse.
+    view.set(&source, 0);
+    backing == FROM_JS
 }
 
 /// What the adapter reported about itself, once [`take_result`] has something.

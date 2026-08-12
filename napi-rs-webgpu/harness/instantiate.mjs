@@ -1,14 +1,14 @@
 // Instantiates the harness as a Node-API WASI addon. Kept independent of
-// node-webgpu so `sync.mjs` can exercise Emnapi's staging-memory bridge on a
-// machine with no GPU.
+// node-webgpu so `memory-view.mjs` can exercise Emnapi's zero-copy Wasm memory
+// view on a machine with no GPU.
 
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { Worker } from "node:worker_threads";
 
-import { createContext } from "@emnapi/runtime";
 import {
   WASI,
+  createContext,
   emnapiAsyncWorkPlugin,
   emnapiTSFNPlugin,
   instantiateNapiModule,

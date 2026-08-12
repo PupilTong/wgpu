@@ -2792,17 +2792,24 @@ impl dispatch::QueueInterface for WebQueue {
     ) {
         let buffer = buffer.as_webgpu();
         #[cfg(wasi)]
-        let data = Uint8Array::from(data);
-        #[cfg(wasi)]
-        self.inner
-            .write_buffer_with_f64_and_u8_slice_and_f64_and_f64(
-                &buffer.inner,
-                offset as f64,
-                &data,
-                0f64,
-                data.length() as f64,
-            )
-            .unwrap();
+        {
+            let data_len = data.len() as f64;
+            // SAFETY: the view aliases `data` in Wasm linear memory. `data`
+            // remains live and immutable through this immediately following,
+            // synchronous WebGPU call, which snapshots the BufferSource before
+            // returning. The view is dropped at the end of this block and
+            // cannot escape into later asynchronous work.
+            let data = unsafe { Uint8Array::view(data) };
+            self.inner
+                .write_buffer_with_f64_and_u8_slice_and_f64_and_f64(
+                    &buffer.inner,
+                    offset as f64,
+                    &data,
+                    0f64,
+                    data_len,
+                )
+                .unwrap();
+        }
         #[cfg(not(wasi))]
         self.inner
             .write_buffer_with_f64_and_u8_slice_and_f64_and_f64(
@@ -2890,16 +2897,22 @@ impl dispatch::QueueInterface for WebQueue {
         let mapped_size = map_extent_3d(size);
 
         #[cfg(wasi)]
-        let data = Uint8Array::from(data);
-        #[cfg(wasi)]
-        self.inner
-            .write_texture_with_u8_slice_and_gpu_extent_3d_dict(
-                &mapped_texture,
-                &data,
-                &mapped_data_layout,
-                &mapped_size,
-            )
-            .unwrap();
+        {
+            // SAFETY: all dictionaries are prepared before creating the view.
+            // The view aliases the live, immutable `data` slice only for the
+            // immediately following synchronous `writeTexture`, which snapshots
+            // its BufferSource before returning. Dropping it with this block
+            // prevents the Wasm-memory view from escaping.
+            let data = unsafe { Uint8Array::view(data) };
+            self.inner
+                .write_texture_with_u8_slice_and_gpu_extent_3d_dict(
+                    &mapped_texture,
+                    &data,
+                    &mapped_data_layout,
+                    &mapped_size,
+                )
+                .unwrap();
+        }
         #[cfg(not(wasi))]
         self.inner
             .write_texture_with_u8_slice_and_gpu_extent_3d_dict(
@@ -4522,8 +4535,9 @@ impl Drop for WebBufferMappedRange {
         // originally provided by the browser
         let temporary_mapping_slice = self.temporary_mapping.get().unwrap().as_slice();
         unsafe {
-            // Note: no allocations can happen between `view` and `set`, or this
-            // will break
+            // SAFETY: `temporary_mapping_slice` remains live and immutable for
+            // the synchronous `TypedArray.set` call. The temporary view exists
+            // only as this argument, and JavaScript cannot retain it here.
             self.actual_mapping
                 .set(&Uint8Array::view(temporary_mapping_slice), 0);
         }
