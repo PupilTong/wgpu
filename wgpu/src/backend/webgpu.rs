@@ -2791,6 +2791,19 @@ impl dispatch::QueueInterface for WebQueue {
         data: &[u8],
     ) {
         let buffer = buffer.as_webgpu();
+        #[cfg(wasi)]
+        let data = Uint8Array::from(data);
+        #[cfg(wasi)]
+        self.inner
+            .write_buffer_with_f64_and_u8_slice_and_f64_and_f64(
+                &buffer.inner,
+                offset as f64,
+                &data,
+                0f64,
+                data.length() as f64,
+            )
+            .unwrap();
+        #[cfg(not(wasi))]
         self.inner
             .write_buffer_with_f64_and_u8_slice_and_f64_and_f64(
                 &buffer.inner,
@@ -2873,13 +2886,27 @@ impl dispatch::QueueInterface for WebQueue {
             mapped_data_layout.set_rows_per_image(rows_per_image);
         }
         mapped_data_layout.set_offset_f64(data_layout.offset as f64);
+        let mapped_texture = map_texture_copy_view(texture);
+        let mapped_size = map_extent_3d(size);
 
+        #[cfg(wasi)]
+        let data = Uint8Array::from(data);
+        #[cfg(wasi)]
         self.inner
             .write_texture_with_u8_slice_and_gpu_extent_3d_dict(
-                &map_texture_copy_view(texture),
+                &mapped_texture,
+                &data,
+                &mapped_data_layout,
+                &mapped_size,
+            )
+            .unwrap();
+        #[cfg(not(wasi))]
+        self.inner
+            .write_texture_with_u8_slice_and_gpu_extent_3d_dict(
+                &mapped_texture,
                 data,
                 &mapped_data_layout,
-                &map_extent_3d(size),
+                &mapped_size,
             )
             .unwrap();
     }

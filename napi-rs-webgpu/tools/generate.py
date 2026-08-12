@@ -450,6 +450,11 @@ class Types:
             if head == "js_sys::Array":
                 return f"&[{self.value(args[0])}]"
             if inner.startswith("[") and inner.endswith("]"):
+                # WebGPU's BufferSource arguments must be ArrayBuffer views, not
+                # ordinary JavaScript sequences. Node-API cannot expose a view
+                # over Wasm memory, so Uint8Array owns the required copy.
+                if normalize(inner[1:-1]) == "u8":
+                    return "&crate::Uint8Array"
                 return f"&[{self.value(inner[1:-1])}]"
             return f"&{self.value(inner)}"
         head, args = parse_generic(text)

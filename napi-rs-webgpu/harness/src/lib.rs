@@ -4,8 +4,9 @@
 //! compiling, but "the bindings reach a real WebGPU implementation" can only be
 //! checked by reaching one. Built for `wasm32-wasip1-threads`, loaded by
 //! `@napi-rs/wasm-runtime`, and handed the `GPU` that the `webgpu` npm package's
-//! `create([])` returns, it clears a 64×64 texture to one colour, draws a
-//! triangle over half of it in another, and reads the pixels back.
+//! `create([])` returns, it uploads a colour with `queue.write_buffer`, clears a
+//! 64×64 texture to another colour, draws a triangle over half of it in the
+//! uploaded colour, and reads the pixels back.
 //!
 //! Half, not all: a render that covered the whole target would pass with the
 //! draw silently doing nothing, since a clear alone would produce a uniform
@@ -34,7 +35,6 @@ use std::task::{Context, Poll, Waker};
 // Imported one by one rather than through `napi::bindgen_prelude::*`, which
 // brings a `Result<T, S = Status>` alias that quietly shadows `core`'s and turns
 // every `Result<T, String>` in this file into `Result<T, napi::Error<String>>`.
-use napi::bindgen_prelude::Uint8Array;
 use napi::{Env, Error, JsValue as _, Unknown};
 use napi_derive::napi;
 
@@ -57,6 +57,8 @@ const CLEAR: [u8; 4] = [0x11, 0x22, 0x33, 0xff];
 const DRAW: [u8; 4] = [0x33, 0x99, 0x66, 0xff];
 
 const SHADER: &str = r#"
+@group(0) @binding(0) var<uniform> colour: vec4<u32>;
+
 @vertex
 fn vs(@builtin(vertex_index) index: u32) -> @builtin(position) vec4<f32> {
     // Half the viewport: the triangle below the diagonal x + y = 0, which in
@@ -71,7 +73,7 @@ fn vs(@builtin(vertex_index) index: u32) -> @builtin(position) vec4<f32> {
 
 @fragment
 fn fs() -> @location(0) vec4<f32> {
-    return vec4<f32>(51.0 / 255.0, 153.0 / 255.0, 102.0 / 255.0, 1.0);
+    return vec4<f32>(colour) / 255.0;
 }
 "#;
 
@@ -127,12 +129,25 @@ pub fn start() {
 ///
 /// If the render failed, with the step that failed and why.
 #[napi]
-pub fn take_result() -> napi::Result<Option<Uint8Array>> {
+pub fn take_result() -> napi::Result<Option<Vec<u32>>> {
     match OUTCOME.with(|slot| slot.borrow_mut().take()) {
         None => Ok(None),
-        Some(Ok((_, pixels))) => Ok(Some(pixels.into())),
+        Some(Ok((_, pixels))) => Ok(Some(pixels.into_iter().map(u32::from).collect())),
         Some(Err(message)) => Err(Error::from_reason(message)),
     }
+}
+
+/// Whether bytes copied from Rust through an Emnapi-backed JavaScript typed
+/// array survive the Wasm staging-memory boundary.
+///
+/// This is deliberately independent of WebGPU, so CI can cover the
+/// `emnapi_sync_memory` path without requiring a GPU.
+#[napi]
+pub fn sync_roundtrip(env: Env) -> bool {
+    const EXPECTED: &[u8] = b"napi-rs-webgpu staging sync";
+    // SAFETY: this call owns a live `napi_env` for the current thread.
+    unsafe { napi_rs_webgpu::install(env.raw()) };
+    napi_rs_webgpu::Uint8Array::from(EXPECTED).to_vec() == EXPECTED
 }
 
 /// What the adapter reported about itself, once [`take_result`] has something.
@@ -234,6 +249,26 @@ async fn render() -> Outcome<Rendered> {
         cache: None,
     });
 
+    let colour = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("triangle colour"),
+        size: 16,
+        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    let colour_bytes = DRAW
+        .into_iter()
+        .flat_map(|channel| u32::from(channel).to_le_bytes())
+        .collect::<Vec<_>>();
+    queue.write_buffer(&colour, 0, &colour_bytes);
+    let colour_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("triangle colour"),
+        layout: &pipeline.get_bind_group_layout(0),
+        entries: &[wgpu::BindGroupEntry {
+            binding: 0,
+            resource: colour.as_entire_binding(),
+        }],
+    });
+
     let row_bytes = SIZE * 4;
     assert_eq!(row_bytes % wgpu::COPY_BYTES_PER_ROW_ALIGNMENT, 0);
     let readback = device.create_buffer(&wgpu::BufferDescriptor {
@@ -270,6 +305,7 @@ async fn render() -> Outcome<Rendered> {
             multiview_mask: None,
         });
         pass.set_pipeline(&pipeline);
+        pass.set_bind_group(0, &colour_group, &[]);
         pass.draw(0..3, 0..1);
     }
     encoder.copy_texture_to_buffer(

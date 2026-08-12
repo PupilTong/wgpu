@@ -185,14 +185,14 @@ webgpu_members! {
     method write_buffer_with_f64_and_u8_slice_and_f64_and_f64(
         buffer: &GpuBuffer,
         buffer_offset: f64,
-        data: &[u8],
+        data: &crate::Uint8Array,
         data_offset: f64,
         size: f64,
     ) as "writeBuffer" catch;
     /// The `writeTexture()` method.
     method write_texture_with_u8_slice_and_gpu_extent_3d_dict(
         destination: &GpuTexelCopyTextureInfo,
-        data: &[u8],
+        data: &crate::Uint8Array,
         data_layout: &GpuTexelCopyBufferLayout,
         size: &GpuExtent3dDict,
     ) as "writeTexture" catch;

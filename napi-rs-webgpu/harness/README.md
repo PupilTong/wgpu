@@ -22,6 +22,11 @@ adapter: BrowserWebGpu / Metal driver on macOS Version 26.4.1 (Build 25E253) /
 ok: 64x64 through napi-rs-webgpu — 2016 px 339966ff (triangle), 2080 px 112233ff (clear)
 ```
 
+The GPU-free synchronization regression test is `npm run test:sync`. It returns
+known Rust bytes through `napi-rs-webgpu`'s JavaScript `Uint8Array` and checks
+that Emnapi flushed its Wasm-side staging allocation. CI runs this narrower
+test; it catches the zero-byte failure without an adapter.
+
 The build alone is `npm run build`, which is:
 
 ```bash
@@ -38,6 +43,9 @@ and no nightly. The target ships with the pinned toolchain.
 
 A 64×64 `Rgba8Unorm` texture, cleared to `#112233ff`, with a triangle covering the
 lower-left half drawn in `#339966ff`, copied to a buffer and mapped for reading.
+The triangle colour is uploaded through `queue.writeBuffer`, so the run also
+checks that Emnapi synchronizes Rust's Wasm-side staging bytes into the
+JavaScript `Uint8Array` WebGPU reads.
 64 pixels of RGBA is exactly 256 bytes, which is `COPY_BYTES_PER_ROW_ALIGNMENT`,
 so the readback needs no row padding and the mapped bytes are the image.
 
@@ -57,7 +65,8 @@ Between them these exercise the parts of the binding that a `cargo check` cannot
 event loop, `createShaderModule` with WGSL, `createRenderPipeline` with its
 `sequence<GPUColorTargetState?>`, `beginRenderPass` with its
 `sequence<GPURenderPassColorAttachment?>` — the nullable sequences that
-`JsOption<T>` exists for — `copyTextureToBuffer`, and `mapAsync`, whose callback
+`JsOption<T>` exists for — `queue.writeBuffer` across Emnapi's split
+Wasm/JavaScript memory, `copyTextureToBuffer`, and `mapAsync`, whose callback
 arrives from a `then` job rather than from `device.poll`, which is a no-op on this
 backend.
 
@@ -81,17 +90,16 @@ node-webgpu returns its `GPU` from `create([])` and installs no `navigator`, so
 and have to be put on the global object, because the bindings recognise types with
 `instanceof`.
 
-## Not committed to CI
+## Pixel test is local-only
 
 CI runners have no GPU, and node-webgpu needs one. The build half of this is
-covered — the WASI job compiles `wgpu` for both WASI targets and asserts the
-dependency graph — but the run half is a local check.
+covered — the WASI job compiles `wgpu` for both WASI targets, asserts the
+dependency graph, and runs the GPU-free Emnapi byte round trip — but the pixel
+run remains a local check.
 
 ## `wasm32-wasip1` without threads
 
-Not supported by the toolchain as it stands, and this is a limitation of emnapi
-rather than of the bindings: `napi-build` 2.4 links `libemnapi-basic-napi-rs.a`
-for a non-threaded WASI target, and emnapi 1.11.3 ships no such archive — only the
-threaded `libemnapi-napi-rs-mt.a`. `napi-build` says as much when it fails:
-"Install emnapi v2 with support for the wasm32-wasip1 archive". `napi-rs-webgpu`
-itself compiles for plain `wasm32-wasip1`, and CI checks that.
+The bindings also compile for plain `wasm32-wasip1`, and CI checks that target.
+This runtime harness deliberately uses `wasm32-wasip1-threads`: it covers the
+same shared-memory NAPI-RS/Emnapi route browser embedders use and keeps one
+acceptance artifact rather than duplicating the run for both targets.

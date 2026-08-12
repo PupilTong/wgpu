@@ -365,6 +365,20 @@ jobs:
           # resolve. `--all-features` cannot be used here: it turns on `webgl`,
           # which `wgpu-hal` refuses on WASI.
 
+      # Compiling cannot catch a missing Emnapi staging-memory flush: the
+      # resulting typed array is well-typed but contains zeroes. Run the small
+      # GPU-free round trip once (the threaded matrix entry), independently of
+      # the local-only node-webgpu pixel test.
+      - name: Check WASI Emnapi byte synchronization
+        if: matrix.kind == 'wasi' && matrix.target == 'wasm32-wasip1-threads'
+        working-directory: napi-rs-webgpu/harness
+        shell: bash
+        run: |
+          set -e
+
+          npm ci
+          npm run test:sync
+
       # Building for platforms where the tests do not compile.
       - name: Check `wgpu` only
         if: matrix.kind == 'wgpu-only'

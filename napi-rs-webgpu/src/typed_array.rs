@@ -17,6 +17,20 @@ use crate::napi::value::JsValue;
 
 use super::Object;
 
+#[cfg(target_family = "wasm")]
+#[link(wasm_import_module = "emnapi")]
+unsafe extern "C" {
+    /// Flushes an Emnapi staging allocation into its JavaScript value. The
+    /// public Emnapi ABI takes a pointer because it may replace the handle.
+    fn emnapi_sync_memory(
+        env: sys::napi_env,
+        js_to_wasm: bool,
+        arraybuffer_or_view: *mut sys::napi_value,
+        byte_offset: usize,
+        length: usize,
+    ) -> sys::napi_status;
+}
+
 js_type! {
     /// The JavaScript `ArrayBuffer`.
     ///
@@ -156,10 +170,11 @@ macro_rules! typed_array {
             fn from_slice(slice: &[$element]) -> Self {
                 let byte_length = core::mem::size_of_val(slice);
                 let created = env::scope(|env| {
-                    // SAFETY: inside a handle scope on `env`. `napi_create_arraybuffer`
-                    // reports the backing store of the buffer it just created, which
-                    // is `byte_length` writable bytes owned by nothing else yet, and
-                    // `napi_create_typedarray` is given that same buffer with a zero
+                    // SAFETY: inside a handle scope on `env`.
+                    // `napi_create_arraybuffer` reports `byte_length` writable bytes
+                    // owned by the new buffer (a Wasm-side staging allocation under
+                    // Emnapi). The staging bytes are flushed before
+                    // `napi_create_typedarray` receives that same buffer with a zero
                     // offset and a matching element count.
                     unsafe {
                         let mut data = ptr::null_mut();
@@ -179,6 +194,22 @@ macro_rules! typed_array {
                                 data.cast::<u8>(),
                                 byte_length,
                             );
+                            // Emnapi represents a JavaScript-owned ArrayBuffer
+                            // with a staging allocation in Wasm memory. Writing
+                            // that pointer alone does not update the JavaScript
+                            // buffer; flush the staging bytes before exposing
+                            // the typed-array view to WebGPU.
+                            #[cfg(target_family = "wasm")]
+                            env::check(
+                                emnapi_sync_memory(
+                                    env,
+                                    false,
+                                    &mut buffer,
+                                    0,
+                                    byte_length,
+                                ),
+                                "emnapi_sync_memory",
+                            )?;
                         }
                         let mut array = ptr::null_mut();
                         env::check(
@@ -269,15 +300,16 @@ typed_array! {
     /// through that view land in the Rust slice, which is why its safety contract is
     /// about the memory being resized underneath it.
     ///
-    /// Node-API has no such handle. Its only way to put bytes into a typed array is
-    /// `napi_create_arraybuffer`, which allocates a *new* backing store and reports a
-    /// pointer to it. So [`Uint8Array::view`] here **copies**: the result is a
-    /// snapshot of the slice, disconnected from Rust memory. The `unsafe` signature is
-    /// kept so callers written against `js-sys` compile unchanged, but this
-    /// implementation has no safety requirement and the aliasing hazard the
-    /// wasm-bindgen version warns about does not exist. `wgpu`'s one caller
-    /// immediately does `actual_mapping.set(&view, 0)`, which still ends with the
-    /// right bytes in the right place, at the cost of one extra copy.
+    /// Node-API has no such handle. Its only route allocates a *new* JavaScript
+    /// backing store; Emnapi reports a Wasm-side staging pointer for it, which this
+    /// crate fills and explicitly synchronizes back to JavaScript. So
+    /// [`Uint8Array::view`] here **copies**: the result is a snapshot of the slice,
+    /// disconnected from Rust memory. The `unsafe` signature is kept so callers
+    /// written against `js-sys` compile unchanged, but this implementation has no
+    /// safety requirement and the aliasing hazard the wasm-bindgen version warns
+    /// about does not exist. `wgpu`'s mapped-buffer caller immediately does
+    /// `actual_mapping.set(&view, 0)`, which still ends with the right bytes in the
+    /// right place, at the cost of one extra copy.
     ///
     /// Reading is the mirror image: [`Uint8Array::to_vec`] asks
     /// `napi_get_typedarray_info` for the element pointer and copies out of it.
