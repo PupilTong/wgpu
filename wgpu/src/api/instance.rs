@@ -2,6 +2,10 @@ use alloc::vec::Vec;
 use core::future::Future;
 
 use crate::{dispatch::InstanceInterface, util::Mutex, *};
+#[cfg(all(web, wasi))]
+use napi_rs_webgpu::JsValue;
+#[cfg(all(web, not(wasi)))]
+use wasm_bindgen::JsValue;
 
 bitflags::bitflags! {
     /// WGSL language extensions.
@@ -220,7 +224,7 @@ impl Instance {
             SurfaceTarget::Canvas(canvas) => {
                 handle_source = None;
 
-                let value: &wasm_bindgen::JsValue = &canvas;
+                let value: &JsValue = &canvas;
                 let obj = core::ptr::NonNull::from(value).cast();
                 let raw_window_handle = raw_window_handle::WebCanvasWindowHandle::new(obj).into();
                 let raw_display_handle = raw_window_handle::WebDisplayHandle::new().into();
@@ -238,7 +242,7 @@ impl Instance {
             SurfaceTarget::OffscreenCanvas(canvas) => {
                 handle_source = None;
 
-                let value: &wasm_bindgen::JsValue = &canvas;
+                let value: &JsValue = &canvas;
                 let obj = core::ptr::NonNull::from(value).cast();
                 let raw_window_handle =
                     raw_window_handle::WebOffscreenCanvasWindowHandle::new(obj).into();

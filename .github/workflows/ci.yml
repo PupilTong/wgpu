@@ -25,7 +25,7 @@ env:
   # This is the MSRV used by all repository infrastructure.
   REPO_MSRV: "1.93"
   # This is the MSRV used by `wgpu` itself.
-  WGPU_MSRV: "1.87"
+  WGPU_MSRV: "1.88"
   # This is the MSRV used by the `wgpu-core`, `wgpu-hal`, and `wgpu-types` crates,
   # to ensure that they can be used with firefox.
   CORE_MSRV: "1.87"
@@ -195,6 +195,21 @@ jobs:
             tier: 3
             extra-flags: -Zbuild-std=std,panic_abort
 
+          # WASI, where the `web` feature reaches JavaScript through Node-API
+          # (napi-rs / emnapi) instead of wasm-bindgen. Both threading models are
+          # built because `@napi-rs/wasm-runtime` supports both.
+          - name: WebAssembly WASI
+            os: ubuntu-24.04
+            target: wasm32-wasip1
+            tier: 2
+            kind: wasi
+
+          - name: WebAssembly WASI threads
+            os: ubuntu-24.04
+            target: wasm32-wasip1-threads
+            tier: 2
+            kind: wasi
+
           - name: Emscripten
             os: ubuntu-24.04
             target: wasm32-unknown-emscripten
@@ -300,6 +315,55 @@ jobs:
           # all features
           cargo --locked clippy --target ${{ matrix.target }} ${{ matrix.extra-flags }} --tests --all-features
           cargo --locked doc --target ${{ matrix.target }} ${{ matrix.extra-flags }} --no-deps --all-features
+
+      # WASI has no wasm-bindgen loader, so `web` means `napi-rs-webgpu` here. Of
+      # the JavaScript backends only `webgpu` can be built — `webgl` is wasm-bindgen
+      # throughout and `wgpu-hal` refuses it — but `noop` builds too, and pairing it
+      # with `webgpu` is what turns on the `wgpu_core` code paths, which have their
+      # own JavaScript-typed signatures. `napi-rs-webgpu` is checked on its own as
+      # well: it is the crate that actually contains the Node-API calls, and nothing
+      # else in the workspace compiles it.
+      #
+      # `--features webgpu,wgsl` is a `no_std` build and the `std` line beside it is
+      # not; both are checked because the feature no longer implies the other.
+      - name: Check WASI
+        if: matrix.kind == 'wasi'
+        shell: bash
+        run: |
+          set -e
+
+          cargo --locked clippy --target ${{ matrix.target }} -p napi-rs-webgpu
+          cargo --locked clippy --target ${{ matrix.target }} -p wgpu --no-default-features --features webgpu,wgsl
+          cargo --locked clippy --target ${{ matrix.target }} -p wgpu --no-default-features --features webgpu,wgsl,std
+          cargo --locked clippy --target ${{ matrix.target }} -p wgpu --no-default-features --features webgpu,noop,wgsl,std
+          cargo --locked clippy --target ${{ matrix.target }} -p wgpu --no-default-features --features web
+          cargo --locked doc --target ${{ matrix.target }} -p napi-rs-webgpu --no-deps
+
+          # The point of the target split, checked rather than described: a WASI
+          # build resolves `napi-rs-webgpu` and none of the four crates it replaces.
+          cargo --locked tree --target ${{ matrix.target }} -p wgpu \
+            --no-default-features --features webgpu,wgsl \
+            -e normal --prefix none | awk '{ print $1 }' | sort -u > /tmp/wasi-deps.txt
+          for crate in js-sys web-sys wasm-bindgen wasm-bindgen-futures; do
+            if grep -qx "$crate" /tmp/wasi-deps.txt; then
+              echo "::error::$crate is still in the WASI dependency graph"
+              exit 1
+            fi
+          done
+          # ...and `napi-rs-webgpu` is: `web` picks it by target, not by a feature
+          # the caller has to remember.
+          grep -qx napi-rs-webgpu /tmp/wasi-deps.txt || {
+            echo "::error::napi-rs-webgpu is missing from the WASI dependency graph"
+            exit 1
+          }
+
+          # No `cargo doc` for `wgpu` itself here: `--no-default-features` with one
+          # backend leaves ten unresolved doc links — four at `wgpu-hal` items such
+          # a build does not have, six at `std` items a `no_std` build does not —
+          # and `RUSTDOCFLAGS: -D warnings` would fail on that pre-existing debt.
+          # The `web` job documents `wgpu` with `--all-features`, where they
+          # resolve. `--all-features` cannot be used here: it turns on `webgl`,
+          # which `wgpu-hal` refuses on WASI.
 
       # Building for platforms where the tests do not compile.
       - name: Check `wgpu` only

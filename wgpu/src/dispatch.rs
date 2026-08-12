@@ -37,6 +37,10 @@ use crate::backend::custom::*;
 use crate::backend::webgpu::*;
 #[cfg(wgpu_core)]
 use crate::backend::wgpu_core::*;
+#[cfg(all(webgpu, not(wasi)))]
+use js_sys::Uint8Array;
+#[cfg(all(webgpu, wasi))]
+use napi_rs_webgpu::Uint8Array;
 
 /// Create a single trait with the given supertraits and a blanket impl for all types that implement them.
 ///
@@ -646,7 +650,7 @@ pub trait BufferMappedRangeInterface: CommonTraits {
     unsafe fn write_slice(&mut self) -> WriteOnly<'_, [u8]>;
 
     #[cfg(webgpu)]
-    fn as_uint8array(&self) -> &js_sys::Uint8Array;
+    fn as_uint8array(&self) -> &Uint8Array;
 }
 
 /// Generates a dispatch type for some `wgpu` API type.

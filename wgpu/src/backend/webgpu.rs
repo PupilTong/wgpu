@@ -1,9 +1,22 @@
 #![allow(clippy::type_complexity)]
 
 mod defined_non_null_js_value;
+// The `navigator.gpu` extension trait, which is wasm-bindgen's way of reaching a
+// property `web-sys` does not declare. `napi-rs-webgpu` reads it directly, so this
+// has nothing to add there.
+#[cfg(not(wasi))]
 mod ext_bindings;
+
+// `webgpu_sys` is web-sys' generated WebGPU bindings, vendored verbatim, and they
+// only work where wasm-bindgen's JS glue does. On WASI the same names come from
+// `napi-rs-webgpu`, which binds WebGPU over Node-API; the generated files are not
+// compiled there at all, so they stay exactly as `cargo xtask vendor-web-sys`
+// wrote them.
+#[cfg(not(wasi))]
 #[allow(clippy::allow_attributes)]
 pub(crate) mod webgpu_sys;
+#[cfg(wasi)]
+pub(crate) use napi_rs_webgpu as webgpu_sys;
 
 use alloc::{
     boxed::Box,
@@ -25,8 +38,31 @@ use core::{
 };
 use wgt::Backends;
 
-use js_sys::Promise;
-use wasm_bindgen::{prelude::*, JsCast};
+// The JavaScript types this backend names: from the wasm-bindgen family on the
+// targets where its loader exists, and from `napi-rs-webgpu` on WASI, where it does
+// not. They are the same JavaScript objects either way, so everything below is
+// written once and only these two `use` blocks differ.
+//
+// `JsException` is the one name the two crates disagree on: it is what a throwing
+// call hands back. `web-sys` spells it `JsValue`, because JavaScript may `throw`
+// any value at all; `napi-rs-webgpu` keeps that same value in an `Error` that can
+// read a `message` off it.
+#[cfg(wasi)]
+use napi_rs_webgpu::{
+    callback::Closure,
+    futures::{spawn_local, JsFuture},
+    window, ArrayBuffer, Error as JsException, HtmlCanvasElement, JsCast, JsOption, JsString,
+    JsValue, Number, Object, OffscreenCanvas, Promise, Reflect, Uint8Array, Undefined,
+};
+#[cfg(not(wasi))]
+use {
+    js_sys::{
+        ArrayBuffer, JsOption, JsString, Number, Object, Promise, Reflect, Uint8Array, Undefined,
+    },
+    wasm_bindgen::{closure::Closure, JsCast, JsValue, JsValue as JsException},
+    wasm_bindgen_futures::{spawn_local, JsFuture},
+    web_sys::{window, HtmlCanvasElement, OffscreenCanvas},
+};
 
 use crate::{
     dispatch::{self, BlasCompactCallback},
@@ -72,7 +108,7 @@ impl fmt::Debug for ContextWebGpu {
 }
 
 impl crate::Error {
-    fn from_js(js_error: js_sys::Object) -> Self {
+    fn from_js(js_error: Object) -> Self {
         let source = Box::<dyn core::error::Error + Send + Sync>::from("<WebGPU Error>");
         if let Some(js_error) = js_error.dyn_ref::<webgpu_sys::GpuValidationError>() {
             crate::Error::Validation {
@@ -840,7 +876,7 @@ const FEATURES_MAPPING: [(wgt::Features, webgpu_sys::GpuFeatureName); 16] = [
 fn map_wgt_features(supported_features: webgpu_sys::GpuSupportedFeatures) -> wgt::Features {
     let mut features = wgt::Features::empty();
     for (wgpu_feat, web_feat) in FEATURES_MAPPING {
-        match wasm_bindgen::JsValue::from(web_feat).as_string() {
+        match JsValue::from(web_feat).as_string() {
             Some(value) if supported_features.has(&value) => features |= wgpu_feat,
             _ => {}
         }
@@ -944,20 +980,20 @@ fn map_adapter_info(adapter_info: &webgpu_sys::GpuAdapterInfo) -> wgt::AdapterIn
     }
 }
 
-fn map_js_sys_limits(limits: &wgt::Limits) -> js_sys::Object<js_sys::Number> {
-    let object = js_sys::Object::<js_sys::Number>::new_typed();
+fn map_js_sys_limits(limits: &wgt::Limits) -> Object<Number> {
+    let object = Object::<Number>::new_typed();
 
     macro_rules! set_properties {
         (($from:expr) => ($on:expr) : $(($js_ident:ident, $rs_ident:ident)),* $(,)?) => {
             $(
-                ::js_sys::Reflect::set(
+                Reflect::set(
                     &$on,
-                    &::wasm_bindgen::JsValue::from(stringify!($js_ident)),
+                    &JsValue::from(stringify!($js_ident)),
                     // Numbers may be u64, however using `from` on a u64 yields
                     // errors on the wasm side, since it uses an unsupported api.
                     // Wasm sends us things that need to fit into u64s by sending
                     // us f64s instead. So we just send them f64s back.
-                    &::wasm_bindgen::JsValue::from($from.$rs_ident as f64)
+                    &JsValue::from($from.$rs_ident as f64)
                 )
                     .expect("Setting Object properties should never fail.");
             )*
@@ -1004,7 +1040,7 @@ fn map_js_sys_limits(limits: &wgt::Limits) -> js_sys::Object<js_sys::Number> {
 }
 
 fn future_request_adapter(
-    result: Result<js_sys::JsOption<webgpu_sys::GpuAdapter>, wasm_bindgen::JsValue>,
+    result: Result<JsOption<webgpu_sys::GpuAdapter>, JsValue>,
     requested_backends: Backends,
 ) -> Result<dispatch::DispatchAdapter, wgt::RequestAdapterError> {
     result
@@ -1034,7 +1070,7 @@ fn request_adapter_null_error(requested_backends: Backends) -> wgt::RequestAdapt
 }
 
 fn future_request_device(
-    result: Result<webgpu_sys::GpuDevice, wasm_bindgen::JsValue>,
+    result: Result<webgpu_sys::GpuDevice, JsValue>,
 ) -> Result<(dispatch::DispatchDevice, dispatch::DispatchQueue), crate::RequestDeviceError> {
     result
         .map(|device| {
@@ -1067,13 +1103,13 @@ fn future_request_device(
 }
 
 fn future_pop_error_scope(
-    result: Result<js_sys::JsOption<webgpu_sys::GpuError>, wasm_bindgen::JsValue>,
+    result: Result<JsOption<webgpu_sys::GpuError>, JsValue>,
 ) -> Option<crate::Error> {
     Some(crate::Error::from_js(result.ok()?.into_option()?.into()))
 }
 
 fn future_compilation_info(
-    result: Result<webgpu_sys::GpuCompilationInfo, wasm_bindgen::JsValue>,
+    result: Result<webgpu_sys::GpuCompilationInfo, JsValue>,
     base_compilation_info: &WebShaderCompilationInfo,
 ) -> crate::CompilationInfo {
     let base_messages = match base_compilation_info {
@@ -1105,7 +1141,7 @@ fn future_compilation_info(
 /// Calls `callback(success_value)` when the promise completes successfully, calls `callback(failure_value)`
 /// when the promise completes unsuccessfully.
 fn register_then_closures<F, T>(
-    promise: &Promise<js_sys::Undefined>,
+    promise: &Promise<Undefined>,
     callback: F,
     success_value: T,
     failure_value: T,
@@ -1127,7 +1163,7 @@ fn register_then_closures<F, T>(
     let rc_callback_clone1 = rc_callback.clone();
     let rc_callback_clone2 = rc_callback.clone();
 
-    let closure_success = wasm_bindgen::closure::Closure::once(move |_| {
+    let closure_success = Closure::once(move |_| {
         let (success_closure, rejection_closure, callback) =
             rc_callback_clone1.borrow_mut().take().unwrap();
         callback(success_value);
@@ -1135,7 +1171,7 @@ fn register_then_closures<F, T>(
         drop((success_closure, rejection_closure));
         Ok(())
     });
-    let closure_rejected = wasm_bindgen::closure::Closure::once(move |_| {
+    let closure_rejected = Closure::once(move |_| {
         let (success_closure, rejection_closure, callback) =
             rc_callback_clone2.borrow_mut().take().unwrap();
         callback(failure_value);
@@ -1159,9 +1195,9 @@ impl ContextWebGpu {
     fn create_surface_from_context(
         &self,
         canvas: Canvas,
-        context_result: Result<Option<js_sys::Object>, wasm_bindgen::JsValue>,
+        context_result: Result<Option<Object>, JsException>,
     ) -> Result<dispatch::DispatchSurface, crate::CreateSurfaceError> {
-        let context: js_sys::Object = match context_result {
+        let context: Object = match context_result {
             Ok(Some(context)) => context,
             Ok(None) => {
                 // <https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext-dev>
@@ -1212,7 +1248,8 @@ impl ContextWebGpu {
 // It can be cast to from `webgpu_sys::global` and exposes two getters `window` and `worker` of which only one is defined depending on the caller's context.
 // When called from the UI thread only `window` is defined whereas `worker` is only defined within a web worker context.
 // See: https://github.com/rustwasm/gloo/blob/2c9e776701ecb90c53e62dec1abd19c2b70e47c7/crates/timers/src/callback.rs#L8-L40
-#[wasm_bindgen]
+#[cfg(not(wasi))]
+#[wasm_bindgen::prelude::wasm_bindgen]
 extern "C" {
     type Global;
 
@@ -1225,8 +1262,8 @@ extern "C" {
 
 #[derive(Debug, Clone)]
 pub enum Canvas {
-    Canvas(web_sys::HtmlCanvasElement),
-    Offscreen(web_sys::OffscreenCanvas),
+    Canvas(HtmlCanvasElement),
+    Offscreen(OffscreenCanvas),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1245,6 +1282,7 @@ pub struct BrowserGpuPropertyInaccessible;
 /// See:
 /// * <https://developer.mozilla.org/en-US/docs/Web/API/Navigator/gpu>
 /// * <https://developer.mozilla.org/en-US/docs/Web/API/WorkerNavigator/gpu>
+#[cfg(not(wasi))]
 pub fn get_browser_gpu_property(
 ) -> Result<Option<DefinedNonNullJsValue<webgpu_sys::Gpu>>, BrowserGpuPropertyInaccessible> {
     let global: Global = js_sys::global().unchecked_into();
@@ -1261,6 +1299,28 @@ pub fn get_browser_gpu_property(
         return Err(BrowserGpuPropertyInaccessible);
     };
     Ok(DefinedNonNullJsValue::new(maybe_undefined_gpu))
+}
+
+/// The WASI counterpart, where the `GPU` is asked for rather than searched for on
+/// a global.
+///
+/// The two branches above are how a browser tells its main thread from a dedicated
+/// worker — the contexts that have `navigator.gpu`. A Node-API host need not define
+/// either, and need not define `navigator` at all: the `webgpu` npm package hands
+/// back a `GPU` from `create([])` and installs nothing on the global. So the object
+/// comes from [`napi_rs_webgpu::gpu`], which returns whatever
+/// `napi_rs_webgpu::install_gpu` was given and falls back to `navigator.gpu`.
+///
+/// `Err(BrowserGpuPropertyInaccessible)` is therefore reserved for the one case it
+/// still describes: no environment installed on this thread, so there is no
+/// JavaScript to ask.
+#[cfg(wasi)]
+pub fn get_browser_gpu_property(
+) -> Result<Option<DefinedNonNullJsValue<webgpu_sys::Gpu>>, BrowserGpuPropertyInaccessible> {
+    if !napi_rs_webgpu::is_installed() {
+        return Err(BrowserGpuPropertyInaccessible);
+    }
+    Ok(napi_rs_webgpu::gpu().and_then(DefinedNonNullJsValue::new))
 }
 
 #[derive(Debug, Clone)]
@@ -1319,7 +1379,7 @@ pub struct WebSampler {
 #[derive(Debug, Clone)]
 struct WebBufferMapState {
     /// The mapped memory of the buffer.
-    pub mapped_buffer: Option<js_sys::ArrayBuffer>,
+    pub mapped_buffer: Option<ArrayBuffer>,
     /// The total range which has been mapped in the buffer overall.
     pub range: Range<wgt::BufferAddress>,
 }
@@ -1355,7 +1415,7 @@ impl WebBuffer {
     fn get_mapped_range(
         &self,
         sub_range: Range<wgt::BufferAddress>,
-    ) -> Result<js_sys::Uint8Array, crate::MapRangeError> {
+    ) -> Result<Uint8Array, crate::MapRangeError> {
         let mut mapping = self.mapping.borrow_mut();
         let range = mapping.range.clone();
         if mapping.mapped_buffer.is_none() {
@@ -1369,7 +1429,7 @@ impl WebBuffer {
             mapping.mapped_buffer = Some(buffer);
         }
         let array_buffer = mapping.mapped_buffer.as_ref().unwrap();
-        Ok(js_sys::Uint8Array::new_with_byte_offset_and_length(
+        Ok(Uint8Array::new_with_byte_offset_and_length(
             array_buffer,
             (sub_range.start - range.start) as u32,
             (sub_range.end - sub_range.start) as u32,
@@ -1527,7 +1587,7 @@ pub struct WebQueueWriteBuffer {
 
 #[derive(Debug)]
 pub struct WebBufferMappedRange {
-    actual_mapping: js_sys::Uint8Array,
+    actual_mapping: Uint8Array,
     /// Copy of actual_mapping that lives in the Rust/Wasm heap instead of JS. This
     /// is done only when accessed for the first time to avoid unnecessary allocations.
     temporary_mapping: OnceCell<Vec<u8>>,
@@ -1624,9 +1684,9 @@ impl dispatch::InstanceInterface for ContextWebGpu {
                 raw_display_handle: _,
                 raw_window_handle,
             } => {
-                let canvas_element: web_sys::HtmlCanvasElement = match raw_window_handle {
+                let canvas_element: HtmlCanvasElement = match raw_window_handle {
                     raw_window_handle::RawWindowHandle::Web(handle) => {
-                        let canvas_node: wasm_bindgen::JsValue = web_sys::window()
+                        let canvas_node: JsValue = window()
                             .and_then(|win| win.document())
                             .and_then(|doc| {
                                 doc.query_selector_all(&format!(
@@ -1646,7 +1706,7 @@ impl dispatch::InstanceInterface for ContextWebGpu {
                     }
                     raw_window_handle::RawWindowHandle::WebOffscreenCanvas(handle) => {
                         let value: &JsValue = unsafe { handle.obj.cast().as_ref() };
-                        let canvas: web_sys::OffscreenCanvas = value.clone().unchecked_into();
+                        let canvas: OffscreenCanvas = value.clone().unchecked_into();
                         let context_result = canvas.get_context("webgpu");
 
                         return self.create_surface_from_context(
@@ -1701,7 +1761,7 @@ impl dispatch::InstanceInterface for ContextWebGpu {
         if let Some(gpu) = &self.gpu {
             let adapter_promise = gpu.request_adapter_with_options(&mapped_options);
             Box::pin(MakeSendFuture::new(
-                wasm_bindgen_futures::JsFuture::from(adapter_promise),
+                JsFuture::from(adapter_promise),
                 move |result| future_request_adapter(result, requested_backends),
             ))
         } else {
@@ -1795,16 +1855,12 @@ impl dispatch::AdapterInterface for WebAdapter {
             .copied()
             .flat_map(|(flag, value)| {
                 if desc.required_features.contains(flag) {
-                    Some(
-                        wasm_bindgen::JsValue::from(value)
-                            .dyn_into::<js_sys::JsString>()
-                            .unwrap(),
-                    )
+                    Some(JsValue::from(value).dyn_into::<JsString>().unwrap())
                 } else {
                     None
                 }
             })
-            .collect::<Vec<js_sys::JsString>>();
+            .collect::<Vec<JsString>>();
         mapped_desc.set_required_features(&required_features);
 
         if let Some(label) = desc.label {
@@ -1814,7 +1870,7 @@ impl dispatch::AdapterInterface for WebAdapter {
         let device_promise = self.inner.request_device_with_descriptor(&mapped_desc);
 
         Box::pin(MakeSendFuture::new(
-            wasm_bindgen_futures::JsFuture::from(device_promise),
+            JsFuture::from(device_promise),
             future_request_device,
         ))
     }
@@ -2277,10 +2333,10 @@ impl dispatch::DeviceInterface for WebDevice {
             .bind_group_layouts
             .iter()
             .map(|bgl| match bgl {
-                Some(bgl) => js_sys::JsOption::wrap(bgl.inner.as_webgpu().inner.clone()),
-                None => js_sys::JsOption::new(),
+                Some(bgl) => JsOption::wrap(bgl.inner.as_webgpu().inner.clone()),
+                None => JsOption::new(),
             })
-            .collect::<Vec<js_sys::JsOption<webgpu_sys::GpuBindGroupLayout>>>();
+            .collect::<Vec<JsOption<webgpu_sys::GpuBindGroupLayout>>>();
         let mapped_desc = webgpu_sys::GpuPipelineLayoutDescriptor::new(&temp_layouts);
         if let Some(label) = desc.label {
             mapped_desc.set_label(label);
@@ -2332,11 +2388,11 @@ impl dispatch::DeviceInterface for WebDevice {
                         &mapped_attributes,
                     );
                     mapped_vbuf.set_step_mode(map_vertex_step_mode(vbuf.step_mode));
-                    js_sys::JsOption::wrap(mapped_vbuf)
+                    JsOption::wrap(mapped_vbuf)
                 }
-                None => js_sys::JsOption::new(),
+                None => JsOption::new(),
             })
-            .collect::<Vec<js_sys::JsOption<webgpu_sys::GpuVertexBufferLayout>>>();
+            .collect::<Vec<JsOption<webgpu_sys::GpuVertexBufferLayout>>>();
 
         mapped_vertex_state.set_buffers(&buffers);
 
@@ -2375,11 +2431,11 @@ impl dispatch::DeviceInterface for WebDevice {
                             mapped_color_state.set_blend(&mapped_blend_state);
                         }
                         mapped_color_state.set_write_mask(target.write_mask.bits());
-                        js_sys::JsOption::wrap(mapped_color_state)
+                        JsOption::wrap(mapped_color_state)
                     }
-                    None => js_sys::JsOption::new(),
+                    None => JsOption::new(),
                 })
-                .collect::<Vec<js_sys::JsOption<webgpu_sys::GpuColorTargetState>>>();
+                .collect::<Vec<JsOption<webgpu_sys::GpuColorTargetState>>>();
             let module = frag.module.inner.as_webgpu();
             let mapped_fragment_desc = webgpu_sys::GpuFragmentState::new(&module.module, &targets);
             insert_constants_map(&mapped_fragment_desc, frag.compilation_options.constants);
@@ -2485,11 +2541,11 @@ impl dispatch::DeviceInterface for WebDevice {
             .view_formats
             .iter()
             .map(|format| {
-                wasm_bindgen::JsValue::from(map_texture_format(*format))
-                    .dyn_into::<js_sys::JsString>()
+                JsValue::from(map_texture_format(*format))
+                    .dyn_into::<JsString>()
                     .unwrap()
             })
-            .collect::<Vec<js_sys::JsString>>();
+            .collect::<Vec<JsString>>();
         mapped_desc.set_view_formats(&mapped_view_formats);
 
         let texture = self.inner.create_texture(&mapped_desc).unwrap();
@@ -2596,14 +2652,14 @@ impl dispatch::DeviceInterface for WebDevice {
             .color_formats
             .iter()
             .map(|cf| match cf {
-                Some(cf) => js_sys::JsOption::wrap(
-                    wasm_bindgen::JsValue::from(map_texture_format(*cf))
-                        .dyn_into::<js_sys::JsString>()
+                Some(cf) => JsOption::wrap(
+                    JsValue::from(map_texture_format(*cf))
+                        .dyn_into::<JsString>()
                         .unwrap(),
                 ),
-                None => js_sys::JsOption::new(),
+                None => JsOption::new(),
             })
-            .collect::<Vec<js_sys::JsOption<js_sys::JsString>>>();
+            .collect::<Vec<JsOption<JsString>>>();
         let mapped_desc = webgpu_sys::GpuRenderBundleEncoderDescriptor::new(&mapped_color_formats);
         if let Some(label) = desc.label {
             mapped_desc.set_label(label);
@@ -2690,7 +2746,7 @@ impl dispatch::DeviceInterface for WebDevice {
 
         let error_promise = self.inner.pop_error_scope();
         Box::pin(MakeSendFuture::new(
-            wasm_bindgen_futures::JsFuture::from(error_promise),
+            JsFuture::from(error_promise),
             future_pop_error_scope,
         ))
     }
@@ -2866,8 +2922,8 @@ impl dispatch::QueueInterface for WebQueue {
 
     fn on_submitted_work_done(&self, callback: dispatch::BoxSubmittedWorkDoneCallback) {
         let promise = self.inner.on_submitted_work_done();
-        wasm_bindgen_futures::spawn_local(async move {
-            match wasm_bindgen_futures::JsFuture::from(promise).await {
+        spawn_local(async move {
+            match JsFuture::from(promise).await {
                 Ok(_) => callback(),
                 Err(error) => {
                     log::error!("on_submitted_work_done promise failed: {error:?}");
@@ -2902,7 +2958,7 @@ impl dispatch::ShaderModuleInterface for WebShaderModule {
             move |result| future_compilation_info(result, &compilation_info)
         });
         Box::pin(MakeSendFuture::new(
-            wasm_bindgen_futures::JsFuture::from(compilation_info_promise),
+            JsFuture::from(compilation_info_promise),
             map_future,
         ))
     }
@@ -3272,11 +3328,11 @@ impl dispatch::CommandEncoderInterface for WebCommandEncoder {
                     }
                     mapped_color_attachment.set_store_op(map_store_op(ca.ops.store));
 
-                    js_sys::JsOption::wrap(mapped_color_attachment)
+                    JsOption::wrap(mapped_color_attachment)
                 }
-                None => js_sys::JsOption::new(),
+                None => JsOption::new(),
             })
-            .collect::<Vec<js_sys::JsOption<webgpu_sys::GpuRenderPassColorAttachment>>>();
+            .collect::<Vec<JsOption<webgpu_sys::GpuRenderPassColorAttachment>>>();
 
         let mapped_desc = webgpu_sys::GpuRenderPassDescriptor::new(&mapped_color_attachments);
 
@@ -4023,10 +4079,10 @@ impl Drop for WebRenderBundle {
     }
 }
 
-/// Evaluates a CSS media query, or `None` if there is no [`web_sys::Window`]
+/// Evaluates a CSS media query, or `None` if there is no `Window`
 /// (Worker / `OffscreenCanvas` contexts, where `matchMedia` is absent).
 fn match_media_query(query: &str) -> Option<bool> {
-    let list = web_sys::window()?.match_media(query).ok().flatten()?;
+    let list = window()?.match_media(query).ok().flatten()?;
     Some(list.matches())
 }
 
@@ -4104,7 +4160,7 @@ mod rgba16float_probe {
     /// Returns `Some(true)`/`Some(false)` if a `rgba16float` canvas could/couldn't
     /// be configured, or `None` if the probe itself couldn't be set up.
     fn try_configure_rgba16float_canvas(device: &webgpu_sys::GpuDevice) -> Option<bool> {
-        let canvas = web_sys::OffscreenCanvas::new(1, 1).ok()?;
+        let canvas = OffscreenCanvas::new(1, 1).ok()?;
         let context = canvas.get_context("webgpu").ok()??;
         let context: webgpu_sys::GpuCanvasContext = context.unchecked_into();
         let config = webgpu_sys::GpuCanvasConfiguration::new(
@@ -4253,7 +4309,7 @@ impl dispatch::SurfaceInterface for WebSurface {
             wgt::SurfaceColorSpace::DisplayP3 => {
                 // The vendored bindings have no `colorSpace` setter, so set
                 // the dictionary member by reflection.
-                js_sys::Reflect::set(
+                Reflect::set(
                     &mapped,
                     &JsValue::from_str("colorSpace"),
                     &JsValue::from_str("display-p3"),
@@ -4275,7 +4331,7 @@ impl dispatch::SurfaceInterface for WebSurface {
                 // with "extended" tone mapping holds Display-P3-encoded
                 // extended-range values. Set both dictionary members (colorSpace
                 // by reflection, as for `DisplayP3`).
-                js_sys::Reflect::set(
+                Reflect::set(
                     &mapped,
                     &JsValue::from_str("colorSpace"),
                     &JsValue::from_str("display-p3"),
@@ -4309,11 +4365,11 @@ impl dispatch::SurfaceInterface for WebSurface {
             .view_formats
             .iter()
             .map(|format| {
-                wasm_bindgen::JsValue::from(map_texture_format(*format))
-                    .dyn_into::<js_sys::JsString>()
+                JsValue::from(map_texture_format(*format))
+                    .dyn_into::<JsString>()
                     .unwrap()
             })
-            .collect::<Vec<js_sys::JsString>>();
+            .collect::<Vec<JsString>>();
         mapped.set_view_formats(&mapped_view_formats);
         // `configure` can throw (e.g. the browser doesn't support the requested
         // canvas format). There is no `catch_unwind` on wasm, so unwrapping here
@@ -4423,7 +4479,7 @@ impl dispatch::BufferMappedRangeInterface for WebBufferMappedRange {
     }
 
     #[inline]
-    fn as_uint8array(&self) -> &js_sys::Uint8Array {
+    fn as_uint8array(&self) -> &Uint8Array {
         &self.actual_mapping
     }
 }
@@ -4442,7 +4498,7 @@ impl Drop for WebBufferMappedRange {
             // Note: no allocations can happen between `view` and `set`, or this
             // will break
             self.actual_mapping
-                .set(&js_sys::Uint8Array::view(temporary_mapping_slice), 0);
+                .set(&Uint8Array::view(temporary_mapping_slice), 0);
         }
     }
 }
@@ -4475,7 +4531,7 @@ impl Drop for WebQueueWriteBuffer {
 /// - [rustwasm/wasm-bindgen#3587](https://github.com/rustwasm/wasm-bindgen/issues/3587)
 fn insert_constants_map(target: &JsValue, map: &[(&str, f64)]) {
     if !map.is_empty() {
-        js_sys::Reflect::set(
+        Reflect::set(
             target,
             &JsValue::from_str("constants"),
             &hashmap_to_jsvalue(map),
@@ -4486,10 +4542,10 @@ fn insert_constants_map(target: &JsValue, map: &[(&str, f64)]) {
 
 /// Converts a hashmap to a Javascript object.
 fn hashmap_to_jsvalue(map: &[(&str, f64)]) -> JsValue {
-    let obj = js_sys::Object::new();
+    let obj = Object::new();
 
     for &(key, v) in map.iter() {
-        js_sys::Reflect::set(&obj, &JsValue::from_str(key), &JsValue::from_f64(v))
+        Reflect::set(&obj, &JsValue::from_str(key), &JsValue::from_f64(v))
             .expect("Setting the values in a Javascript map should never fail");
     }
 

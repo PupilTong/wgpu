@@ -1,0 +1,46 @@
+[package]
+name = "napi-rs-webgpu"
+version.workspace = true
+edition.workspace = true
+description = "WebGPU bound into Rust over Node-API (napi-rs), for wasm32-wasip1 and wasm32-wasip1-threads"
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+license.workspace = true
+# Not the workspace's 1.93: this crate is a dependency of `wgpu`, whose MSRV is
+# the looser one, and Cargo checks `rust-version` across the whole graph. 1.88 is
+# what `napi-sys` requires, so it is the lowest this can honestly be.
+rust-version = "1.88"
+
+[lib]
+
+[dependencies]
+log.workspace = true
+
+# The raw Node-API ABI, and not napi-rs' high-level `napi` crate, whose value
+# types cannot express what `wgpu` stores. `napi::Unknown<'env>` and
+# `napi::Object<'env>` borrow the handle scope they were made in, so neither can
+# live in a `WebBuffer` that outlives the call that produced it; the escaping form,
+# `napi::ObjectRef`, is not `Clone` (every `wgpu` handle is), must be released by
+# an explicit `unref(&Env)` or its `Drop` prints a leak warning, and hands back an
+# `Object<'env>` only when given an `Env` — which WebGPU's signatures have nowhere
+# to carry. `src/napi/value.rs` builds the `'static`, `Clone`, env-free handle
+# those constraints call for. The dependency is three crates rather than
+# twenty-three as a consequence, not as the goal.
+#
+# `napi5` is the floor for `napi_add_finalizer`, which is how a Rust closure handed
+# to JavaScript is freed.
+#
+# On wasm, napi-sys declares the `napi_*` symbols as plain wasm imports, which is
+# what emnapi resolves. Everywhere else `dyn-symbols` is added so this crate still
+# *links* — its stubs resolve to "symbol not loaded" instead of an unresolved
+# reference — which is what keeps a host-side `cargo test --workspace` working even
+# though nothing but WASI ever calls into it.
+[target.'cfg(target_family = "wasm")'.dependencies]
+napi-sys = { workspace = true, features = ["napi5"] }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+napi-sys = { workspace = true, features = ["napi5", "dyn-symbols"] }
+
+[lints]
+workspace = true

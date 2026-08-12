@@ -1,5 +1,22 @@
 #[allow(unused_imports, reason = "conditionally used, including in docs")]
 use crate::{DownlevelFlags, Origin2d};
+// WebGPU's external-image sources are live JavaScript objects, so this names the
+// crate that binds them, which the target decides: `web-sys` where wasm-bindgen has
+// a loader, and `napi-rs-webgpu` on WASI, where it has none and the same objects are
+// reached over Node-API. `web` turns on whichever of the two the target resolves.
+#[cfg(all(target_family = "wasm", target_os = "wasi", feature = "web"))]
+use napi_rs_webgpu::{
+    HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, ImageBitmap, ImageData, Object,
+    OffscreenCanvas, VideoFrame,
+};
+#[cfg(all(target_family = "wasm", not(target_os = "wasi"), feature = "web"))]
+use {
+    js_sys::Object,
+    web_sys::{
+        HtmlCanvasElement, HtmlImageElement, HtmlVideoElement, ImageBitmap, ImageData,
+        OffscreenCanvas, VideoFrame,
+    },
+};
 
 /// View of an external texture that can be used to copy to a texture.
 ///
@@ -32,21 +49,21 @@ pub struct CopyExternalImageSourceInfo {
 #[derive(Clone, Debug)]
 pub enum ExternalImageSource {
     /// Copy from a previously-decoded image bitmap.
-    ImageBitmap(web_sys::ImageBitmap),
+    ImageBitmap(ImageBitmap),
     /// Copy from an image element.
-    HTMLImageElement(web_sys::HtmlImageElement),
+    HTMLImageElement(HtmlImageElement),
     /// Copy from a current frame of a video element.
-    HTMLVideoElement(web_sys::HtmlVideoElement),
+    HTMLVideoElement(HtmlVideoElement),
     /// Copy from an image.
-    ImageData(web_sys::ImageData),
+    ImageData(ImageData),
     /// Copy from a on-screen canvas.
-    HTMLCanvasElement(web_sys::HtmlCanvasElement),
+    HTMLCanvasElement(HtmlCanvasElement),
     /// Copy from a off-screen canvas.
     ///
     /// Requires [`DownlevelFlags::UNRESTRICTED_EXTERNAL_TEXTURE_COPIES`]
-    OffscreenCanvas(web_sys::OffscreenCanvas),
+    OffscreenCanvas(OffscreenCanvas),
     /// Copy from a video frame.
-    VideoFrame(web_sys::VideoFrame),
+    VideoFrame(VideoFrame),
 }
 
 #[cfg(all(target_family = "wasm", feature = "web"))]
@@ -80,7 +97,7 @@ impl ExternalImageSource {
 
 #[cfg(all(target_family = "wasm", feature = "web"))]
 impl core::ops::Deref for ExternalImageSource {
-    type Target = js_sys::Object;
+    type Target = Object;
 
     fn deref(&self) -> &Self::Target {
         match self {
@@ -95,8 +112,27 @@ impl core::ops::Deref for ExternalImageSource {
     }
 }
 
+// `fragile-send-sync-non-atomic-wasm` argues that a wasm binary without atomics is
+// single-threaded, so a JavaScript handle in it cannot cross a thread. That
+// argument does not hold on WASI: `wasm32-wasip1-threads` has real threads and
+// still reports no `atomics` target feature, and the handles here are Node-API
+// values, each belonging to the `napi_env` of one thread. The combination is
+// refused rather than silently marked shareable.
 #[cfg(all(
     target_family = "wasm",
+    target_os = "wasi",
+    feature = "web",
+    feature = "fragile-send-sync-non-atomic-wasm"
+))]
+compile_error!(
+    "wgpu-types: `fragile-send-sync-non-atomic-wasm` cannot be combined with `web` on \
+     `wasm32-wasip1(-threads)` — JavaScript is reached there over Node-API, and a \
+     Node-API value is bound to the thread that owns its environment."
+);
+
+#[cfg(all(
+    target_family = "wasm",
+    not(target_os = "wasi"),
     feature = "web",
     feature = "fragile-send-sync-non-atomic-wasm",
     not(target_feature = "atomics")
@@ -104,6 +140,7 @@ impl core::ops::Deref for ExternalImageSource {
 unsafe impl Send for ExternalImageSource {}
 #[cfg(all(
     target_family = "wasm",
+    not(target_os = "wasi"),
     feature = "web",
     feature = "fragile-send-sync-non-atomic-wasm",
     not(target_feature = "atomics")

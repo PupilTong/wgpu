@@ -3,6 +3,19 @@ fn main() {
         native: { not(target_family = "wasm") },
         Emscripten: { all(target_family = "wasm", target_os = "emscripten") },
         web: { all(target_family = "wasm", not(Emscripten), feature = "web") },
+        // WASI, and by the same token the route the `web` feature takes to
+        // JavaScript. The target decides that, not a feature, because on each
+        // target exactly one of the two can work: wasm-bindgen's bindings are
+        // satisfied by JS glue that `wasm-bindgen-cli` emits for
+        // `wasm32-unknown-unknown` only, and on WASI it compiles every binding to
+        // a stub that panics — so there the same JavaScript objects are reached
+        // over Node-API (napi-rs / emnapi) through `napi-rs-webgpu`.
+        //
+        // The sites that choose between the two say so with this alias directly —
+        // `#[cfg(wasi)]` inside the `webgpu` backend, `#[cfg(all(webgpu, wasi))]`
+        // outside it — rather than through an alias standing for the pair, so that
+        // what is being switched on is the target and reads as one.
+        wasi: { all(target_family = "wasm", target_os = "wasi") },
 
         send_sync: { any(
             native,

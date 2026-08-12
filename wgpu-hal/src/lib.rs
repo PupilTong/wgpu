@@ -242,6 +242,20 @@ extern crate alloc;
 #[allow(unused_extern_crates)]
 extern crate naga_types as nt;
 extern crate wgpu_types as wgt;
+
+// The WebGL backend drives a `WebGl2RenderingContext` through `web-sys`, so it
+// needs wasm-bindgen's JS glue — which `wasm-bindgen-cli` emits for
+// `wasm32-unknown-unknown` only. On WASI those bindings compile to stubs that
+// panic, and `wgpu-types`' JavaScript handles are the Node-API ones there, so the
+// backend does not type-check against them either. `compile_error!` does not stop
+// the rest of the crate being checked, so the `web-sys`-versus-`napi-rs-webgpu`
+// mismatches still follow; this states the reason ahead of them.
+#[cfg(all(webgl, target_os = "wasi"))]
+compile_error!(
+    "wgpu-hal: the WebGL backend cannot be built for `wasm32-wasip1(-threads)` — it \
+     is driven through wasm-bindgen, which has no loader on WASI. Use `wgpu`'s \
+     `webgpu` backend there, which reaches JavaScript over Node-API instead."
+);
 // Each of these backends needs `std` in some fashion; usually `std::thread` functions.
 #[cfg(any(dx12, gles_with_std, metal, vulkan, test))]
 #[macro_use]

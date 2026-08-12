@@ -1,0 +1,46 @@
+# Its own workspace: `vendor/wgpu`'s members list does not include this crate and
+# must not, because its build script requires `EMNAPI_LINK_DIR` and its only
+# target is `wasm32-wasip1-threads`. Cargo refuses a package inside a workspace
+# directory that the workspace does not claim, so the empty table is required.
+[workspace]
+
+[package]
+name = "napi-rs-webgpu-harness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "Runs napi-rs-webgpu against a real WebGPU implementation, as a Node-API addon"
+
+# A `cdylib` is what produces the `.wasm` reactor module. An `rlib` would skip the
+# link step, and with it every argument `napi-build` contributes.
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# `webgpu` implies `web`, which on a WASI target resolves to `napi-rs-webgpu` and
+# not to the wasm-bindgen family — which is the thing under test. `wgsl` is
+# load-bearing: `ShaderSource::Wgsl` is gated on it.
+wgpu = { path = "../../wgpu", default-features = false, features = [
+    "webgpu",
+    "wgsl",
+    "std",
+] }
+
+# The same package instance `wgpu` resolves, so the `GPU` this addon installs is
+# the one `wgpu`'s backend reads.
+napi-rs-webgpu = { path = ".." }
+
+# napi-rs proper, for the module entry points. `default-features = false` drops
+# `dyn-symbols`, whose `libloading` lookup means nothing on wasm.
+napi = { version = "3", default-features = false, features = ["napi8"] }
+napi-derive = "3"
+
+[build-dependencies]
+# Not pinned exactly: `napi` 3.12 build-depends on `napi-build` 2.4, and an `=`
+# pin here resolves `napi` back to 3.11, which `napi-derive` 3.6 does not compile
+# against.
+napi-build = "2"
+
+[profile.release]
+# The addon is a test artifact; the smaller the module, the faster Node loads it.
+opt-level = "s"

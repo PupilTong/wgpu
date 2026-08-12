@@ -28,7 +28,7 @@
 //! | --------------------- | ---------------------- |
 //! | ![render_coordinates] | ![texture_coordinates] |
 //!
-//! `wgpu`'s MSRV is **1.87**.
+//! `wgpu`'s MSRV is **1.88**.
 //!
 //! [Learn Wgpu]: https://sotrh.github.io/learn-wgpu/
 //! [WebGPU Fundamentals]: https://webgpufundamentals.org/
@@ -262,6 +262,20 @@ mod dispatch;
 mod macros;
 pub mod util;
 
+// `fragile-send-sync-non-atomic-wasm` claims `Send`/`Sync` on the argument that a
+// wasm binary without atomics is single-threaded. That argument does not hold on
+// WASI: `wasm32-wasip1-threads` has real threads yet reports no `atomics` target
+// feature, so the feature would silently mark thread-affine Node-API handles as
+// shareable. A Node-API value belongs to the `napi_env` of one thread, so this is
+// refused rather than left to fail at runtime.
+#[cfg(all(web, wasi, send_sync))]
+compile_error!(
+    "wgpu: `fragile-send-sync-non-atomic-wasm` cannot be combined with the `web` \
+     feature on `wasm32-wasip1(-threads)` — JavaScript is reached there over \
+     Node-API, and a Node-API value is bound to the thread that owns its \
+     environment. Keep `wgpu` objects on one thread instead."
+);
+
 //
 //
 // Public re-exports
@@ -306,8 +320,9 @@ pub use wgt::{
 #[expect(deprecated)]
 pub use wgt::VERTEX_STRIDE_ALIGNMENT;
 
-// wasm-only types, we try to keep as many types non-platform
-// specific, but these need to depend on web-sys.
+// wasm-only types, we try to keep as many types non-platform specific, but these
+// hold live JavaScript objects, so they depend on whichever crate binds them —
+// `web-sys`, or `napi-rs-webgpu` on WASI.
 #[cfg(web)]
 pub use wgt::{CopyExternalImageSourceInfo, ExternalImageSource};
 
@@ -329,9 +344,18 @@ pub use naga;
 pub use raw_window_handle as rwh;
 
 /// Re-export of our `web-sys` dependency.
-///
-#[cfg(web)]
+#[cfg(all(web, not(wasi)))]
 pub use web_sys;
+
+/// Re-export of our `napi-rs-webgpu` dependency, which is what the
+/// [`web`](index.html#optional-features) feature means on `wasm32-wasip1` and
+/// `wasm32-wasip1-threads`.
+///
+/// It takes `web-sys`' place there: the DOM and WebGPU objects it declares are the
+/// same JavaScript objects, reached over Node-API rather than through
+/// wasm-bindgen's glue, which does not exist for WASI.
+#[cfg(all(web, wasi))]
+pub use napi_rs_webgpu;
 
 /// Vendored WebGPU JS-handle types used by the WebGPU backend.
 ///
@@ -342,7 +366,11 @@ pub use web_sys;
 ///
 /// A `web_sys::GpuTexture` from a consumer's own `web-sys` dependency wraps
 /// the same JS object as a `wgpu::webgpu::GpuTexture`; convert between them
-/// with [`wasm_bindgen::JsCast::unchecked_into`].
+/// with `wasm_bindgen::JsCast::unchecked_into`.
+///
+/// On `wasm32-wasip1(-threads)` there is no `web-sys` to hold the other handle;
+/// the counterpart is a `napi_rs_webgpu` type, and the conversion is that crate's
+/// `JsCast::unchecked_into`, which performs the same reinterpretation.
 #[cfg(webgpu)]
 pub mod webgpu {
     pub use crate::backend::webgpu::webgpu_sys::{

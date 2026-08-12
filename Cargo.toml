@@ -17,6 +17,7 @@ members = [
     "naga/fuzz",
     "naga/hlsl-snapshots",
     "naga/xtask",
+    "napi-rs-webgpu",
     "player",
     "tests",
     "wgpu-core",
@@ -42,6 +43,7 @@ default-members = [
     "naga/fuzz",
     "naga/hlsl-snapshots",
     "naga/xtask",
+    "napi-rs-webgpu",
     "player",
     "tests",
     "wgpu-core",
@@ -92,6 +94,7 @@ wgpu = { version = "30.0.0", path = "./wgpu", default-features = false, features
 wgpu-core = { version = "30.0.0", path = "./wgpu-core" }
 wgpu-hal = { version = "30.0.0", path = "./wgpu-hal" }
 wgpu-naga-bridge = { version = "30.0.0", path = "./wgpu-naga-bridge" }
+napi-rs-webgpu = { version = "30.0.0", path = "./napi-rs-webgpu" }
 wgpu-test = { version = "30.0.0", path = "./tests" }
 wgpu-types = { version = "30.0.0", path = "./wgpu-types", default-features = false }
 
@@ -152,6 +155,11 @@ libm = { version = "0.2.6", default-features = false }
 libtest-mimic = "0.8"
 log = "0.4.29"
 macro_rules_attribute = "0.2"
+# The raw Node-API ABI, from the napi-rs 3.x line. `default-features = false`
+# drops `dyn-symbols`, whose `libloading` runtime lookup is for native addons;
+# on `target_family = "wasm"` napi-sys declares the `napi_*` symbols as plain
+# imports, which is what emnapi resolves.
+napi-sys = { version = "3.3.0", default-features = false }
 nanoserde = "0.2"
 nanorand = { version = "0.8", default-features = false, features = ["wyrand"] }
 noise = "0.9"

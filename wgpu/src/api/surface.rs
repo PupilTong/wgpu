@@ -7,6 +7,10 @@ use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 
 use crate::util::Mutex;
 use crate::*;
+#[cfg(all(web, wasi))]
+use napi_rs_webgpu::{HtmlCanvasElement, OffscreenCanvas};
+#[cfg(all(web, not(wasi)))]
+use web_sys::{HtmlCanvasElement, OffscreenCanvas};
 
 /// Describes a [`Surface`].
 ///
@@ -315,7 +319,7 @@ pub enum SurfaceTarget<'window> {
     /// [`crate::InstanceDescriptor::display`].
     Window(Box<dyn WindowHandle + 'window>),
 
-    /// Surface from a `web_sys::HtmlCanvasElement`.
+    /// Surface from an `HTMLCanvasElement`.
     ///
     /// The `canvas` argument must be a valid `<canvas>` element to
     /// create a surface upon.
@@ -325,9 +329,9 @@ pub enum SurfaceTarget<'window> {
     /// - On WebGL2: surface creation will return an error if the browser does not support WebGL2,
     ///   or declines to provide GPU access (such as due to a resource shortage).
     #[cfg(web)]
-    Canvas(web_sys::HtmlCanvasElement),
+    Canvas(HtmlCanvasElement),
 
-    /// Surface from a `web_sys::OffscreenCanvas`.
+    /// Surface from an `OffscreenCanvas`.
     ///
     /// The `canvas` argument must be a valid `OffscreenCanvas` object
     /// to create a surface upon.
@@ -337,7 +341,7 @@ pub enum SurfaceTarget<'window> {
     /// - On WebGL2: surface creation will return an error if the browser does not support WebGL2,
     ///   or declines to provide GPU access (such as due to a resource shortage).
     #[cfg(web)]
-    OffscreenCanvas(web_sys::OffscreenCanvas),
+    OffscreenCanvas(OffscreenCanvas),
 }
 
 impl fmt::Debug for SurfaceTarget<'_> {

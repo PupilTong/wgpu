@@ -21,6 +21,12 @@ skip = [
 
     # wgpu-hal -> drm -> drm-sys uses an older version, while wgpu-hal -> drm -> rustix uses a newer one
     { name = "linux-raw-sys", version = "0.9.4" },
+
+    # napi-rs-webgpu -> napi-sys depends on libloading 0.9 unconditionally (it is how
+    # a native Node addon looks up the Node-API symbols), while several graphics
+    # crates are still on 0.8. Nothing links both: napi-sys is only compiled for
+    # WASI targets, where it declares those symbols as wasm imports instead.
+    { name = "libloading", version = "0.8.9" },
 ]
 wildcards = "deny"
 allow-wildcard-paths = true

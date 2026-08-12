@@ -20,6 +20,14 @@ use hashbrown::HashMap;
 
 use arrayvec::ArrayVec;
 use smallvec::SmallVec;
+// Named only by `BufferMappedRangeInterface::as_uint8array`, which this backend
+// cannot answer and which exists because the WebGPU backend can. Which crate the
+// type comes from is decided by the target, as everywhere else `wgpu` names a
+// JavaScript type.
+#[cfg(all(webgpu, not(wasi)))]
+use js_sys::Uint8Array;
+#[cfg(all(webgpu, wasi))]
+use napi_rs_webgpu::Uint8Array;
 use wgc::{
     error::ContextErrorSource, pipeline::CreateShaderModuleError,
     resource::BlasPrepareCompactResult,
@@ -4134,7 +4142,7 @@ impl dispatch::BufferMappedRangeInterface for CoreBufferMappedRange {
     }
 
     #[cfg(webgpu)]
-    fn as_uint8array(&self) -> &js_sys::Uint8Array {
+    fn as_uint8array(&self) -> &Uint8Array {
         panic!("Only available on WebGPU")
     }
 }
