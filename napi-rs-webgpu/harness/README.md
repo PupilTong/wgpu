@@ -22,12 +22,6 @@ adapter: BrowserWebGpu / Metal driver on macOS Version 26.4.1 (Build 25E253) /
 ok: 64x64 through napi-rs-webgpu — 2016 px 339966ff (triangle), 2080 px 112233ff (clear)
 ```
 
-The GPU-free memory-view regression test is `npm run test:view`. It creates an
-Emnapi `Uint8Array` view directly over Rust bytes in shared Wasm memory and
-checks that mutations are visible from both sides without a staging allocation
-or a synchronization copy. CI runs this narrower test without requiring an
-adapter.
-
 The build alone is `npm run build`, which is:
 
 ```bash
@@ -91,12 +85,11 @@ node-webgpu returns its `GPU` from `create([])` and installs no `navigator`, so
 and have to be put on the global object, because the bindings recognise types with
 `instanceof`.
 
-## Pixel test is local-only
+## Not committed to CI
 
 CI runners have no GPU, and node-webgpu needs one. The build half of this is
-covered — the WASI job compiles `wgpu` for both WASI targets, asserts the
-dependency graph, and runs the GPU-free Emnapi memory-view alias test — but the
-pixel run remains a local check.
+covered — the WASI job compiles `wgpu` for both WASI targets and asserts the
+dependency graph — but the run half is a local check.
 
 ## `wasm32-wasip1` without threads
 

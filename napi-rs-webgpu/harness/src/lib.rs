@@ -35,10 +35,9 @@ use std::task::{Context, Poll, Waker};
 // Imported one by one rather than through `napi::bindgen_prelude::*`, which
 // brings a `Result<T, S = Status>` alias that quietly shadows `core`'s and turns
 // every `Result<T, String>` in this file into `Result<T, napi::Error<String>>`.
-use napi::bindgen_prelude::Uint8Array as NapiUint8Array;
+use napi::bindgen_prelude::Uint8Array;
 use napi::{Env, Error, JsValue as _, Unknown};
 use napi_derive::napi;
-use napi_rs_webgpu::Uint8Array as WebUint8Array;
 
 /// What this addon's own fallible steps return, kept clear of napi-rs' `Result`.
 type Outcome<T> = core::result::Result<T, String>;
@@ -131,48 +130,12 @@ pub fn start() {
 ///
 /// If the render failed, with the step that failed and why.
 #[napi]
-pub fn take_result() -> napi::Result<Option<NapiUint8Array>> {
+pub fn take_result() -> napi::Result<Option<Uint8Array>> {
     match OUTCOME.with(|slot| slot.borrow_mut().take()) {
         None => Ok(None),
         Some(Ok((_, pixels))) => Ok(Some(pixels.into())),
         Some(Err(message)) => Err(Error::from_reason(message)),
     }
-}
-
-/// Whether an Emnapi typed-array view aliases Rust's shared Wasm memory in both
-/// directions without an intermediate JavaScript backing store.
-///
-/// This is deliberately independent of WebGPU, so CI can cover the memory-view
-/// bridge without requiring an adapter.
-#[napi]
-pub fn memory_view_aliases(env: Env) -> bool {
-    const FROM_RUST: [u8; 8] = [0x13, 0x37, 0x42, 0x7f, 0x80, 0xa5, 0xcc, 0xfe];
-    const FROM_JS: [u8; 8] = [0xfe, 0xcc, 0xa5, 0x80, 0x7f, 0x42, 0x37, 0x13];
-
-    // SAFETY: this call owns a live `napi_env` for the current thread.
-    unsafe { napi_rs_webgpu::install(env.raw()) };
-
-    let source_bytes = FROM_JS;
-    // SAFETY: `source_bytes` remains live and immutable through the synchronous
-    // `TypedArray.set` call below.
-    let source = unsafe { WebUint8Array::view(&source_bytes) };
-    let mut backing = [0; FROM_RUST.len()];
-    // SAFETY: `backing` stays live until every access through `view` is complete.
-    // Rust and JavaScript touch it only in separate, synchronous steps, and this
-    // threaded harness imports fixed shared memory, whose existing range remains
-    // valid if the memory grows.
-    let view = unsafe { WebUint8Array::view(&backing) };
-
-    // A constructor-time copy would remain all-zero and fail this check.
-    backing.copy_from_slice(&FROM_RUST);
-    if view.to_vec() != FROM_RUST {
-        return false;
-    }
-
-    // `TypedArray.set` writes through the JS view. Seeing the bytes in the Rust
-    // array proves the backing store is the same shared Wasm memory in reverse.
-    view.set(&source, 0);
-    backing == FROM_JS
 }
 
 /// What the adapter reported about itself, once [`take_result`] has something.

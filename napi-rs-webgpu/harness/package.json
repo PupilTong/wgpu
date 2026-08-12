@@ -6,8 +6,7 @@
   "description": "Runs the napi-rs-webgpu bindings against node-webgpu, from a wasm32-wasip1-threads addon.",
   "scripts": {
     "build": "EMNAPI_LINK_DIR=\"$PWD/node_modules/emnapi/lib/wasm32-wasip1-threads\" cargo build --target wasm32-wasip1-threads --release",
-    "test": "npm run build && node run.mjs",
-    "test:view": "npm run build && node memory-view.mjs"
+    "test": "npm run build && node run.mjs"
   },
   "dependencies": {
     "@emnapi/core": "^1.11.3",
