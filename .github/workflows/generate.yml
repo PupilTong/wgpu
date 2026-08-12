@@ -19,7 +19,7 @@ env:
   #
 
   # This is the MSRV used by `wgpu` itself.
-  WGPU_MSRV: "1.87"
+  WGPU_MSRV: "1.88"
   RUSTFLAGS: -D warnings
 
 # Every time a PR is pushed to, cancel any previous jobs. This
